@@ -117,23 +117,6 @@ io.on('connection', (socket) => {
         })
     })
 
-    socket.on('snake update', (snake) => {
-        let gameState = gameStates.get(socket.data.roomid)
-        if (gameState === undefined) {
-            socket.emit('room not found')
-            return
-        }
-        if (socket.id === gameState['player1id']) {
-            gameState.snake1 = snake
-        } else if (socket.id === gameState['player2id']) {
-            gameState.snake2 = snake
-        } else {
-            socket.emit('not in room')
-            return
-        }
-        io.to(gameState.roomid).emit('snake broadcast', gameState)
-    })
-
     console.log('a user connected')
     socket.on('disconnect', () => {
         let gameState = gameStates.get(socket.data.roomid)

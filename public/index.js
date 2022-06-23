@@ -12,7 +12,7 @@ let gameEnd
 let boardRow = 50
 let boardCol = 100
 
-let snextDirection = [0]
+let snextDirection = []
 
 function coordToStraight(row, col){
     return row * boardCol + col

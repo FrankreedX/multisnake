@@ -19,6 +19,18 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function startGame(gameState){
+    io.to(gameState.roomid).emit('snake update', gameState)
+    for(let i = 3; i >= 0; i--){
+        if(i !== 0)
+            io.to(gameState.roomid).emit('initial countdown', i)
+        else
+            game.spawnFood(gameState)
+        await sleep(1000)
+    }
+    await game.play(io.to(gameState.roomid), gameState)
+}
+
 io.on('connection', (socket) => {
     socket.on('createRoom', (values) => {
         let gameState = {
@@ -36,7 +48,7 @@ io.on('connection', (socket) => {
         }
         for(let i = 0; i < 15; i++){
             gameState.snake1.unshift([gameState.boardRow / 2, i])
-            gameState.snake2.unshift([gameState.boardRow / 2 + 10, gameState.boardCol - i])
+            gameState.snake2.unshift([gameState.boardRow / 2 + 10, gameState.boardCol - i - 1])
         }
         console.log("created room id: ", gameState.roomid)
         socket.data.roomid = socket.id
@@ -44,7 +56,7 @@ io.on('connection', (socket) => {
         socket.emit("room created", gameState.roomid)
     })
 
-    socket.on('joinRoom', async (roomid) => {
+    socket.on('joinRoom', (roomid) => {
         console.log("Player ", socket.id, " tried joining room ", roomid)
         let gameState = gameStates.get(roomid)
         if (gameState === undefined) {
@@ -59,15 +71,7 @@ io.on('connection', (socket) => {
         socket.data.roomid = gameState.roomid
         gameState['player2id'] = socket.id
         io.to(gameState.roomid).emit('player 2 joined the room')
-        io.to(gameState.roomid).emit('snake update', gameState)
-        for(let i = 3; i >= 0; i--){
-            if(i !== 0)
-                io.to(gameState.roomid).emit('initial countdown', i)
-            else
-                game.spawnFood(gameState)
-            await sleep(1000)
-        }
-        game.play(io.to(gameState.roomid), gameState).then(() => {
+        startGame(gameState).then(() => {
             gameState.gameFinished = true
         })
     })
@@ -86,6 +90,31 @@ io.on('connection', (socket) => {
         } else {
             socket.emit('not in room')
         }
+    })
+
+    socket.on('rematch', () => {
+        let gameState = gameStates.get(socket.data.roomid)
+        if (gameState === undefined) {
+            socket.emit('room not found')
+            return
+        }
+        console.log("rematch requested from room id ", socket.data.roomid)
+        gameState.gameFinished = false
+        gameState.food = []
+        gameState.foodCounter = 0
+        gameState.snake1 = []
+        gameState.snake2 = []
+        gameState.snake1Direction = 3
+        gameState.snake2Direction = 1
+
+        for(let i = 0; i < 15; i++){
+            gameState.snake1.unshift([gameState.boardRow / 2, i])
+            gameState.snake2.unshift([gameState.boardRow / 2 + 10, gameState.boardCol - i - 1])
+        }
+
+        startGame(gameState).then(() => {
+            gameState.gameFinished = true
+        })
     })
 
     socket.on('snake update', (snake) => {

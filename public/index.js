@@ -7,6 +7,7 @@ let gridItems
 let countdown
 let foodCount
 let frames
+let gameEnd
 
 let boardRow = 50
 let boardCol = 100
@@ -26,13 +27,15 @@ window.onload = async()=>{
     countdown = document.getElementById("countdown");
     foodCount = document.getElementById("foodcount")
     frames = document.getElementById("frames")
+    gameEnd = document.getElementById("gameEnd")
 
     playfield.style.setProperty('--grid-rows', boardRow.toString());
     playfield.style.setProperty('--grid-cols', boardCol.toString());
-    for (let c = 0; c < (boardRow * boardCol); c++) {
+    for (let c = 0; c < boardRow * boardCol; c++) {
         let cell = document.createElement("div");
         cell.style.setProperty("background-color", "black")
-        playfield.appendChild(cell).className = "grid-item";
+        cell.className = "grid-item"
+        playfield.appendChild(cell);
     }
 }
 
@@ -51,6 +54,9 @@ function joinRoom(room){
     socket.emit('joinRoom', room)
 }
 
+function rematch(){
+    socket.emit('rematch')
+}
 
 socket.on('room created', (room) => {
     roomid = room
@@ -94,9 +100,14 @@ socket.on('input', (game)=> {
     socket.emit('input', snakeDirection)
 })
 
+socket.on('game ended', (winner) => {
+    console.log(winner)
+    gameEnd.textContent = 'Winner: ' + winner[0].winner + '.' + winner[0].reason
+})
+
 function renderBoard(){
-    if(!gridItems)
-        return
+    // if(!gridItems)
+    //     return
     for(let c = 0; c < boardCol * boardRow; c++){
         gridItems[c].style.setProperty("background-color", backgroundColor)
     }

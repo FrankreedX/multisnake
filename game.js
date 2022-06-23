@@ -56,7 +56,7 @@ async function mainGameLoop(broacaster, gameState){
     let alive = true
     while(alive){
         let time = new Date();
-        broacaster.emit('input', gameState)
+        broacaster.emit('get input', gameState)
         let nextHead1 = dirToCoord(gameState, gameState.snake1Direction, gameState.snake1[0])
         let nextHead2 = dirToCoord(gameState, gameState.snake2Direction, gameState.snake2[0])
         let gameEndObj = []

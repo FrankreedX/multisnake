@@ -84,7 +84,7 @@ socket.on('initial countdown', async (num) => {
     }
 })
 
-socket.on('input', (game)=> {
+socket.on('get input', (game)=> {
     gameState = game
     let snakeDirection
     if(socket.id === gameState.player1id){
@@ -101,7 +101,7 @@ socket.on('input', (game)=> {
         snakeDirection = nextDir
     }
     console.log("Sending direciton ", snakeDirection)
-    socket.emit('input', snakeDirection)
+    socket.emit('send input', snakeDirection)
 })
 
 socket.on('game ended', (winner) => {

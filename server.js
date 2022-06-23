@@ -76,7 +76,7 @@ io.on('connection', (socket) => {
         })
     })
 
-    socket.on('input', (direction) => {
+    socket.on('send input', (direction) => {
         let gameState = gameStates.get(socket.data.roomid)
         if (gameState === undefined) {
             socket.emit('room not found')

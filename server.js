@@ -38,6 +38,7 @@ io.on('connection', (socket) => {
             'boardRow': values.boardRow,
             'player1id': socket.id,
             'roomid': socket.id,
+            'frame': 0,
             'food': [],
             'foodCounter': 0,
             'snake1': [],
@@ -123,6 +124,7 @@ io.on('connection', (socket) => {
         if(gameState !== undefined) {
             console.log('user disconnected from room ', socket.data.roomid)
             io.to(gameState.roomid).emit('player left room')
+            gameState.gameFinished = true
             gameStates.delete(socket.data.roomid)
         }
     })

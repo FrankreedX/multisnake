@@ -63,6 +63,7 @@ socket.on('room created', (room) => {
 })
 
 socket.on('snake update', (game) => {
+    console.log('snake update')
     gameState = game
     foodCount.textContent = "Food count: " + gameState.foodCounter
     frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter/10))
@@ -76,8 +77,9 @@ socket.on('initial countdown', async (num) => {
         }
     }
     if(num === 2){
-        while(gameState.gameFinished === false) {
+        while(gameState.gameFinished === false && socket.connected){
             let time = new Date()
+            console.log("rendering frame " + gameState.frame)
             renderBoard()
             await sleep(1000/60 - (time - new Date()))
         }
@@ -107,6 +109,7 @@ socket.on('get input', (game)=> {
 socket.on('game ended', (winner) => {
     console.log(winner)
     gameEnd.textContent = 'Winner: ' + winner[0].winner + '.' + winner[0].reason
+    gameState.gameFinished = true
 })
 
 function renderBoard(){

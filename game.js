@@ -53,12 +53,22 @@ function dirToCoord(gameState, direction, coord){
 async function mainGameLoop(broacaster, gameState){
     console.log("playing state: ", gameState)
     broacaster.emit('snake update', gameState)
-    let alive = true
-    while(alive){
+    gameState['frame'] = 0
+    while(gameState.gameFinished === false){
         let time = new Date();
-        broacaster.emit('get input', gameState)
+        // broacaster.emit('get input', gameState)
+        console.log(gameState.gameFinished)
+        console.log("getting input")
+        console.log("directions for frame ", gameState['frame'])
+        console.log("Snake 1's direction: ", gameState.snake1Direction)
+        console.log("Snake 2's direction: ", gameState.snake2Direction)
+        console.log("Snake 1's head: ", gameState.snake1[0])
+        console.log("Snake 2's head: ", gameState.snake2[0])
         let nextHead1 = dirToCoord(gameState, gameState.snake1Direction, gameState.snake1[0])
         let nextHead2 = dirToCoord(gameState, gameState.snake2Direction, gameState.snake2[0])
+        console.log("Next head 1: ", nextHead1)
+        console.log("Next head 2: ", nextHead2)
+        broacaster.emit('get input', gameState)
         let gameEndObj = []
         if(coordEqual(nextHead1, nextHead2)){
             gameEndObj.push({'winner': 'tie'})
@@ -112,8 +122,10 @@ async function mainGameLoop(broacaster, gameState){
             gameState.snake2.pop()
         }
         time = new Date() - time
-        await sleep(1000/(15 + Math.floor(gameState.foodCounter/10)) - time)
+        //await sleep(1000/(15 + Math.floor(gameState.foodCounter/10)) - time)
+        await sleep(10000 - time)
         broacaster.emit('snake update', gameState)
+        gameState['frame']++
     }
 }
 

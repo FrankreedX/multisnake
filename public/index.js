@@ -76,7 +76,7 @@ socket.on('initial countdown', async (num) => {
         }
     }
     if(num === 2){
-        while(true) {
+        while(gameState.gameFinished === false) {
             let time = new Date()
             renderBoard()
             await sleep(1000/60 - (time - new Date()))
@@ -88,14 +88,18 @@ socket.on('input', (game)=> {
     gameState = game
     let snakeDirection
     if(socket.id === gameState.player1id){
+        console.log("player1 received direction", gameState.snake1Direction)
         snakeDirection = gameState.snake1Direction
     } else{
+        console.log("player2 received direction", gameState.snake2Direction)
         snakeDirection = gameState.snake2Direction
     }
     let nextDir = snextDirection.shift()
     console.log("next Dir: ", nextDir)
-    if((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2) // no going backwards
+    if((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2){
+        console.log("changing direction from ", snakeDirection, " to ", nextDir)
         snakeDirection = nextDir
+    }
     console.log("Sending direciton ", snakeDirection)
     socket.emit('input', snakeDirection)
 })

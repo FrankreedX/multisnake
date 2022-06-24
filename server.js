@@ -28,7 +28,7 @@ async function startGame(gameState){
             game.spawnFood(gameState)
         await sleep(1000)
     }
-    await game.play(io.to(gameState.roomid), gameState)
+    await game.play(io.to(gameState.roomid), gameState, gameState.framerate)
 }
 
 io.on('connection', (socket) => {
@@ -39,6 +39,7 @@ io.on('connection', (socket) => {
             'player1id': socket.id,
             'roomid': socket.id,
             'frame': 0,
+            'framerate': 15,
             'food': [],
             'foodCounter': 0,
             'snake1': [],
@@ -91,6 +92,15 @@ io.on('connection', (socket) => {
         } else {
             socket.emit('not in room')
         }
+    })
+
+    socket.on('updateFramerate', (framerate) => {
+        let gameState = gameStates.get(socket.data.roomid)
+        if (gameState === undefined) {
+            socket.emit('room not found')
+            return
+        }
+        gameState.frame = framerate
     })
 
     socket.on('rematch', () => {

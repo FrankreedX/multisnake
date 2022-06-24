@@ -50,7 +50,7 @@ function dirToCoord(gameState, direction, coord){
     return coordinate
 }
 
-async function mainGameLoop(broacaster, gameState){
+async function mainGameLoop(broacaster, gameState, framerate){
     console.log("playing state: ", gameState)
     broacaster.emit('snake update', gameState)
     gameState['frame'] = 0
@@ -122,8 +122,8 @@ async function mainGameLoop(broacaster, gameState){
             gameState.snake2.pop()
         }
         time = new Date() - time
-        //await sleep(1000/(15 + Math.floor(gameState.foodCounter/10)) - time)
-        await sleep(10000 - time)
+        await sleep(1000/(15 + Math.floor(gameState.foodCounter/10)) - time)
+        // await sleep(1000/framerate - time) // debug time
         broacaster.emit('snake update', gameState)
         gameState['frame']++
     }

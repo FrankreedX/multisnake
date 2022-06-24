@@ -17,6 +17,11 @@
 <label for="roomidToJoin">Room ID to join</label>
 <input type="text" id="roomidToJoin" name="roomidToJoin">
 <br>
+<label for="framerate">New Framerate</label>
+<input type="text" id="framerate" name="framerate">
+<br>
+<button type="button" id="update-framerate" onclick="updateFramerate(document.getElementById('update-framerate').value)">Update framerate</button>
+<br>
 <button type="button" id="joinRoom" onclick="joinRoom(document.getElementById('roomidToJoin').value)">Join Room</button>
 <button type="button" id="rematchBtn" onclick="rematch()">Rematch</button>
 <p id="countdown">Countdown: </p>

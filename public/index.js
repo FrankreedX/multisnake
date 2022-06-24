@@ -58,6 +58,10 @@ function rematch(){
     socket.emit('rematch')
 }
 
+function updateFramerate(fps) {
+    socket.emit('updateFramerate', fps)
+}
+
 socket.on('room created', (room) => {
     roomid = room
 })

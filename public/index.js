@@ -12,7 +12,7 @@ let gameEnd
 let boardRow = 50
 let boardCol = 100
 
-let snextDirection = []
+let snextDirection = 0
 
 function coordToStraight(row, col){
     return row * boardCol + col
@@ -71,8 +71,14 @@ socket.on('snake update', (game) => {
     gameState = game
     foodCount.textContent = "Food count: " + gameState.foodCounter
     frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter/10))
-})
 
+    currentFrame = gameState.frame
+    console.log("rendering frame " + gameState.frame)
+    console.log("snake1 head: " + gameState.snake1[0])
+    console.log("snake2 head: " + gameState.snake2[0])
+    renderBoard()
+})
+let currentFrame = 0
 socket.on('initial countdown', async (num) => {
     countdown.textContent = "Countdown: " + num
     if(num === 3){
@@ -81,33 +87,30 @@ socket.on('initial countdown', async (num) => {
         }
     }
     if(num === 2){
-        while(gameState.gameFinished === false && socket.connected){
-            let time = new Date()
-            console.log("rendering frame " + gameState.frame)
-            renderBoard()
-            await sleep(1000/60 - (time - new Date()))
-        }
+        renderBoard()
     }
 })
 
 socket.on('get input', (game)=> {
     gameState = game
-    let snakeDirection
-    if(socket.id === gameState.player1id){
-        console.log("player1 received direction", gameState.snake1Direction)
-        snakeDirection = gameState.snake1Direction
-    } else{
-        console.log("player2 received direction", gameState.snake2Direction)
-        snakeDirection = gameState.snake2Direction
-    }
-    let nextDir = snextDirection.shift()
-    console.log("next Dir: ", nextDir)
-    if((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2){
-        console.log("changing direction from ", snakeDirection, " to ", nextDir)
-        snakeDirection = nextDir
-    }
-    console.log("Sending direciton ", snakeDirection)
-    socket.emit('send input', snakeDirection)
+    // gameState = game
+    // let snakeDirection
+    // if(socket.id === gameState.player1id){
+    //     console.log("player1 received direction", gameState.snake1Direction)
+    //     snakeDirection = gameState.snake1Direction
+    // } else{
+    //     console.log("player2 received direction", gameState.snake2Direction)
+    //     snakeDirection = gameState.snake2Direction
+    // }
+    // console.log("next Dir: ", snextDirection)
+    // if((snextDirection !== undefined && snextDirection !== null) && Math.abs(snakeDirection - snextDirection) !== 2){
+    //     console.log("changing direction from ", snakeDirection, " to ", snextDirection)
+    //     snakeDirection = snextDirection
+    // }
+    // console.log("Sending direciton ", snakeDirection)
+    // socket.emit('send input', snakeDirection)
+    console.log("Sending direciton ", snextDirection)
+    socket.emit('send input', {dir: snextDirection, frame: gameState.frame})
 })
 
 socket.on('game ended', (winner) => {
@@ -144,9 +147,6 @@ function renderBoard(){
 }
 
 document.addEventListener('keydown', function(event) {
-    if(event.shiftKey){
-        snextDirection = []
-    }
     let nextDir = -1
     switch(event.key){
         case "ArrowUp":
@@ -174,8 +174,8 @@ document.addEventListener('keydown', function(event) {
             console.log('Right was pressed');
             break;
     }
-    if(nextDir !== snextDirection[snextDirection.length - 1] && nextDir !== -1) {
-        snextDirection.push(nextDir)
+    if(nextDir !== snextDirection && nextDir !== -1) {
+        snextDirection = nextDir
         console.log("snextdirection: ", snextDirection)
     }
 });

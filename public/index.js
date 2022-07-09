@@ -12,7 +12,8 @@ let gameEnd
 let boardRow = 50
 let boardCol = 100
 
-let snextDirection = 0
+let frameDirectionQueue = []
+let bufferedDirectionQueue = []
 
 function coordToStraight(row, col){
     return row * boardCol + col
@@ -70,7 +71,7 @@ socket.on('snake update', (game) => {
     console.log('snake update')
     gameState = game
     foodCount.textContent = "Food count: " + gameState.foodCounter
-    frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter/10))
+    frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter))
 
     currentFrame = gameState.frame
     console.log("rendering frame " + gameState.frame)
@@ -93,24 +94,26 @@ socket.on('initial countdown', async (num) => {
 
 socket.on('get input', (game)=> {
     gameState = game
-    // gameState = game
-    // let snakeDirection
-    // if(socket.id === gameState.player1id){
-    //     console.log("player1 received direction", gameState.snake1Direction)
-    //     snakeDirection = gameState.snake1Direction
-    // } else{
-    //     console.log("player2 received direction", gameState.snake2Direction)
-    //     snakeDirection = gameState.snake2Direction
-    // }
-    // console.log("next Dir: ", snextDirection)
-    // if((snextDirection !== undefined && snextDirection !== null) && Math.abs(snakeDirection - snextDirection) !== 2){
-    //     console.log("changing direction from ", snakeDirection, " to ", snextDirection)
-    //     snakeDirection = snextDirection
-    // }
-    // console.log("Sending direciton ", snakeDirection)
-    // socket.emit('send input', snakeDirection)
-    console.log("Sending direciton ", snextDirection)
-    socket.emit('send input', {dir: snextDirection, frame: gameState.frame})
+    if(frameDirectionQueue.length > 0){
+        bufferedDirectionQueue = frameDirectionQueue
+    }
+    frameDirectionQueue = []
+    let snakeDirection
+    if(socket.id === gameState.player1id){
+        console.log("player1 received direction", gameState.snake1Direction)
+        snakeDirection = gameState.snake1Direction
+    } else{
+        console.log("player2 received direction", gameState.snake2Direction)
+        snakeDirection = gameState.snake2Direction
+    }
+    let nextDir = bufferedDirectionQueue.shift()
+    console.log("next Dir: ", nextDir)
+    if((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2){
+        console.log("changing direction from ", snakeDirection, " to ", nextDir)
+        snakeDirection = nextDir
+    }
+    console.log("Sending direciton ", snakeDirection)
+    socket.emit('send input', {dir: snakeDirection, frame: gameState.frame})
 })
 
 socket.on('game ended', (winner) => {
@@ -174,9 +177,9 @@ document.addEventListener('keydown', function(event) {
             console.log('Right was pressed');
             break;
     }
-    if(nextDir !== snextDirection && nextDir !== -1) {
-        snextDirection = nextDir
-        console.log("snextdirection: ", snextDirection)
+    if(nextDir !== frameDirectionQueue[frameDirectionQueue.length - 1] && nextDir !== -1) {
+        frameDirectionQueue.push(nextDir)
+        console.log("frameDirectionQueue: ", frameDirectionQueue)
     }
 });
 

@@ -1,3 +1,5 @@
+const winLength = 50
+
 function spawnFood(gameState) {
     let validCoords = false
     let row = 0
@@ -67,6 +69,7 @@ function processGameTurn(broacaster, gameState) {
         gameEndObj.push({'winner': 'tie'})
         console.log('tie. player 1 and player 2 collided')
         broacaster.emit('game ended', gameEndObj)
+        gameState.gameFinished = true
         return
     } else {
         for (let i = 0; i < gameState.snake1.length; i++) {
@@ -91,24 +94,36 @@ function processGameTurn(broacaster, gameState) {
         }
         if (gameEndObj.length === 1) {
             broacaster.emit('game ended', gameEndObj)
+            gameState.gameFinished = true
             return
         }
         if (gameEndObj.length > 1) {
             gameEndObj = [{'winner': 'tie'}]
             console.log('tie. player 1 and player 2 collided at the same time')
             broacaster.emit('game ended', gameEndObj)
+            gameState.gameFinished = true
             return
         }
     }
     gameState.snake1.unshift(nextHead1)
     gameState.snake2.unshift(nextHead2)
     if (coordEqual(nextHead1, gameState.food)) {
+        if(gameState.snake1.length > winLength) {
+            gameEndObj.push({'winner': 'player 1', 'reason': 'player 1 reached ' + winLength + ' length'})
+            broacaster.emit('game ended', gameEndObj)
+            gameState.gameFinished = true
+        }
         spawnFood(gameState)
         gameState.foodCounter++
     } else {
         gameState.snake1.pop()
     }
     if (coordEqual(nextHead2, gameState.food)) {
+        if(gameState.snake2.length > winLength) {
+            gameEndObj.push({'winner': 'player 2', 'reason': 'player 2 reached ' + winLength + ' length'})
+            broacaster.emit('game ended', gameEndObj)
+            gameState.gameFinished = true
+        }
         spawnFood(gameState)
         gameState.foodCounter++
     } else {

@@ -81,9 +81,7 @@ io.on('connection', (socket) => {
         socket.data.roomid = gameState.roomid
         gameState['player2id'] = socket.id
         broadcaster.emit('player 2 joined the room')
-        startGame(gameState).then(() => {
-            gameState.gameFinished = true
-        })
+        startGame(gameState)
     })
 
     socket.on('send input', (direction) => {
@@ -104,7 +102,7 @@ io.on('connection', (socket) => {
             socket.emit('not in room')
             return
         }
-        if (gameState.receivedInput1 && gameState.receivedInput2) {
+        if (gameState.receivedInput1 && gameState.receivedInput2 && !gameState.gameFinished) {
             gameState.receivedInput1 = false
             gameState.receivedInput2 = false
 
@@ -112,7 +110,9 @@ io.on('connection', (socket) => {
             broadcaster.emit('snake update', gameState)
             gameState['frame']++
             time = new Date() - time
-            sleep((1000 / (15 + (gameState.foodCounter / 3))) - time).then(() => {
+            console.log("time: ", time)
+            console.log("pausing for ", 1000 / (15 + gameState.foodCounter) - time)
+            sleep((1000 / (15 + gameState.foodCounter)) - time).then(() => {
                 broadcaster.emit('get input', gameState)
             })
         }

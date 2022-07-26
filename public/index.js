@@ -8,9 +8,10 @@ let countdown
 let foodCount
 let frames
 let gameEnd
+let debug
 
-let boardRow = 50
-let boardCol = 100
+let boardRow = 25
+let boardCol = 50
 
 let frameDirectionQueue = []
 let bufferedDirectionQueue = []
@@ -28,6 +29,7 @@ window.onload = async()=>{
     countdown = document.getElementById("countdown");
     foodCount = document.getElementById("foodcount")
     frames = document.getElementById("frames")
+    debug = document.getElementById("debug").value
     gameEnd = document.getElementById("gameEnd")
 
     playfield.style.setProperty('--grid-rows', boardRow.toString());
@@ -47,12 +49,16 @@ let foodColor = "Green"
 let guideColor = "DimGray"
 
 function createRoom(){
-    socket.emit('createRoom', {'boardCol': boardCol, 'boardRow': boardRow})
+    socket.emit('createRoom', {'boardCol': boardCol, 'boardRow': boardRow, 'debugMode': debug})
     document.getElementById('roomid').textContent = "Room created: " + socket.id
 }
 
 function joinRoom(room){
     socket.emit('joinRoom', room)
+}
+
+function echoTest(message){
+    socket.emit('echoTest', message)
 }
 
 function rematch(){
@@ -67,10 +73,15 @@ socket.on('room created', (room) => {
     roomid = room
 })
 
+socket.on('echo', (message) => {
+    console.log('client echoing', message)
+})
+
 socket.on('snake update', (game) => {
     console.log('snake update')
     gameState = game
     foodCount.textContent = "Food count: " + gameState.foodCounter
+    if(!debug)
     frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter))
 
     currentFrame = gameState.frame

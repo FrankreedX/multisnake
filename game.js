@@ -112,6 +112,7 @@ function processGameTurn(broacaster, gameState) {
             gameEndObj.push({'winner': 'player 1', 'reason': 'player 1 reached ' + winLength + ' length'})
             broacaster.emit('game ended', gameEndObj)
             gameState.gameFinished = true
+            return
         }
         spawnFood(gameState)
         gameState.foodCounter++
@@ -123,6 +124,7 @@ function processGameTurn(broacaster, gameState) {
             gameEndObj.push({'winner': 'player 2', 'reason': 'player 2 reached ' + winLength + ' length'})
             broacaster.emit('game ended', gameEndObj)
             gameState.gameFinished = true
+            return
         }
         spawnFood(gameState)
         gameState.foodCounter++

@@ -37,6 +37,17 @@ async function startGame(gameState){
 }
 
 io.on('connection', (socket) => {
+    console.log('user id ', socket.id, ' connected')
+
+    socket.on('echoTest', (message) => {
+        console.log('server echo', message)
+        socket.emit('echo', message)
+    })
+
+    socket.on('getSnake', ()=>{
+        socket.emit('snakeUpdate', gameStates.get(socket.data.roomid))
+    })
+
     socket.on('createRoom', (values) => {
         let gameState = {
             'boardCol': values.boardCol,
@@ -45,6 +56,7 @@ io.on('connection', (socket) => {
             'roomid': socket.id,
             'frame': 0,
             'framerate': 15,
+            'debug': values.debugMode,
             'food': [],
             'foodCounter': 0,
             'snake1': [],
@@ -56,8 +68,8 @@ io.on('connection', (socket) => {
             'receivedInput2': true
         }
         for(let i = 0; i < 15; i++){
-            gameState.snake1.unshift([gameState.boardRow / 2, i])
-            gameState.snake2.unshift([gameState.boardRow / 2 + 10, gameState.boardCol - i - 1])
+            gameState.snake1.unshift([Math.floor(gameState.boardRow / 2 - 5), i])
+            gameState.snake2.unshift([Math.floor(gameState.boardRow / 2 + 5), gameState.boardCol - i - 1])
         }
         console.log("created room id: ", gameState.roomid)
         socket.data.roomid = socket.id
@@ -73,7 +85,7 @@ io.on('connection', (socket) => {
             socket.emit('room not found')
             return
         }
-        if (gameState.player2id !== undefined){
+        if (gameState.player2id !== undefined && gameState.player2id !== socket.id) {
             socket.emit('room occupied')
             return
         }
@@ -106,13 +118,16 @@ io.on('connection', (socket) => {
             gameState.receivedInput1 = false
             gameState.receivedInput2 = false
 
-            game.play(broadcaster, gameState, gameState.framerate)
+            game.play(broadcaster, gameState)
             broadcaster.emit('snake update', gameState)
             gameState['frame']++
             time = new Date() - time
             console.log("time: ", time)
-            console.log("pausing for ", 1000 / (15 + gameState.foodCounter) - time)
-            sleep((1000 / (15 + gameState.foodCounter)) - time).then(() => {
+            if(!gameState.debug){
+                gameState.framerate = 10 + gameState.foodCounter
+            }
+            console.log("pausing for ", 1000 / gameState.framerate - time)
+            sleep(1000 / gameState.framerate - time).then(() => {
                 broadcaster.emit('get input', gameState)
             })
         }
@@ -124,7 +139,8 @@ io.on('connection', (socket) => {
             socket.emit('room not found')
             return
         }
-        gameState.frame = framerate
+        if(gameState.debug)
+            gameState.framerate = framerate
     })
 
     socket.on('rematch', () => {
@@ -151,8 +167,6 @@ io.on('connection', (socket) => {
             gameState.gameFinished = true
         })
     })
-
-    console.log('a user connected')
     socket.on('disconnect', () => {
         let gameState = gameStates.get(socket.data.roomid)
         if(gameState !== undefined) {
@@ -168,3 +182,5 @@ let port = process.env.PORT || 3000
 server.listen(port, () => {
     console.log('listening on *:', port)
 })
+
+exports.server = server

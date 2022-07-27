@@ -101,6 +101,9 @@ socket.on('initial countdown', async (num) => {
     if(num === 2){
         renderBoard()
     }
+    if(num === 1){
+        frameDirectionQueue = []
+    }
 })
 
 socket.on('get input', (game)=> {

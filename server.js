@@ -16,6 +16,15 @@ app.use(express.static('./public'))
 //     res.send()
 // })
 
+function initializeSnakes(gameState){
+    gameState.snake1 = []
+    gameState.snake2 = []
+    for(let i = 0; i < 15; i++){
+        gameState.snake1.unshift([Math.floor(gameState.boardRow / 2 - 5), i])
+        gameState.snake2.unshift([Math.floor(gameState.boardRow / 2 + 5), gameState.boardCol - i - 1])
+    }
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -67,10 +76,7 @@ io.on('connection', (socket) => {
             'receivedInput1': true,
             'receivedInput2': true
         }
-        for(let i = 0; i < 15; i++){
-            gameState.snake1.unshift([Math.floor(gameState.boardRow / 2 - 5), i])
-            gameState.snake2.unshift([Math.floor(gameState.boardRow / 2 + 5), gameState.boardCol - i - 1])
-        }
+        initializeSnakes(gameState)
         console.log("created room id: ", gameState.roomid)
         socket.data.roomid = socket.id
         broadcaster = io.to(gameState.roomid)
@@ -158,14 +164,9 @@ io.on('connection', (socket) => {
         gameState.snake1Direction = 3
         gameState.snake2Direction = 1
 
-        for(let i = 0; i < 15; i++){
-            gameState.snake1.unshift([gameState.boardRow / 2, i])
-            gameState.snake2.unshift([gameState.boardRow / 2 + 10, gameState.boardCol - i - 1])
-        }
+        initializeSnakes(gameState)
 
-        startGame(gameState).then(() => {
-            gameState.gameFinished = true
-        })
+        startGame(gameState)
     })
     socket.on('disconnect', () => {
         let gameState = gameStates.get(socket.data.roomid)

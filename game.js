@@ -33,20 +33,20 @@ function dirToCoord(gameState, direction, coord) {
             if (coordinate[0] < 0)
                 coordinate[0] += gameState.boardRow
             break
-        case 1: //left
-            coordinate[1]--
-            if (coordinate[1] < 0)
-                coordinate[1] += gameState.boardCol
+        case 1: //right
+            coordinate[1]++
+            if (coordinate[1] >= gameState.boardCol)
+                coordinate[1] -= gameState.boardCol
             break
         case 2: //down
             coordinate[0]++
             if (coordinate[0] >= gameState.boardRow)
                 coordinate[0] -= gameState.boardRow
             break
-        case 3: //right
-            coordinate[1]++
-            if (coordinate[1] >= gameState.boardCol)
-                coordinate[1] -= gameState.boardCol
+        case 3: //left
+            coordinate[1]--
+            if (coordinate[1] < 0)
+                coordinate[1] += gameState.boardCol
             break
     }
     return coordinate

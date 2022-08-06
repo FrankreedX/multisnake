@@ -69,9 +69,9 @@ io.on('connection', (socket) => {
             'food': [],
             'foodCounter': 0,
             'snake1': [],
-            'snake1Direction': 3,
+            'snake1Direction': 1,
             'snake2': [],
-            'snake2Direction': 1,
+            'snake2Direction': 3,
             'gameFinished': false,
             'receivedInput1': true,
             'receivedInput2': true
@@ -161,8 +161,8 @@ io.on('connection', (socket) => {
         gameState.foodCounter = 0
         gameState.snake1 = []
         gameState.snake2 = []
-        gameState.snake1Direction = 3
-        gameState.snake2Direction = 1
+        gameState.snake1Direction = 1
+        gameState.snake2Direction = 3
 
         initializeSnakes(gameState)
 

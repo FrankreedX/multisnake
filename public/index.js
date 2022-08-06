@@ -101,7 +101,7 @@ socket.on('initial countdown', async (num) => {
     if(num === 2){
         renderBoard()
     }
-    if(num === 1){
+    if(num === 0){
         frameDirectionQueue = []
     }
 })
@@ -137,10 +137,9 @@ socket.on('game ended', (winner) => {
 })
 
 function renderBoard(){
-    // if(!gridItems)
-    //     return
     for(let c = 0; c < boardCol * boardRow; c++){
         gridItems[c].style.setProperty("background-color", backgroundColor)
+        gridItems[c].style.removeProperty("background-image")
     }
     let snakes = [gameState.snake1, gameState.snake2]
     for(let i = 0; i < 2; i++) {
@@ -152,12 +151,101 @@ function renderBoard(){
             setColor(snake[0][0], c, guideColor)
         }
     }
-    let color = [snake1Color, snake2Color]
+    let snake_head = ['Assets/head_snake_red.png', 'Assets/head_snake_blue.png']
+    let snake_tail = ['Assets/tail_red.png', 'Assets/tail_blue.png']
+    let snake_direction = [gameState.snake1Direction, gameState.snake2Direction]
+    let body_parts = [{'01': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.25turn)"},
+        '02': {"background-image": "url(Assets/body_red.png)"},
+        '03': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0turn)"},
+        '12': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.5turn)"},
+        '13': {"background-image": "url(Assets/body_red.png)", "transform": "rotate(0.25turn)"},
+        '23': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.75turn)"}},
+        {'01': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.25turn)"},
+        '02': {"background-image": "url(Assets/body_blue.png)"},
+        '03': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0turn)"},
+        '12': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.5turn)"},
+        '13': {"background-image": "url(Assets/body_blue.png)", "transform": "rotate(0.25turn)"},
+        '23': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.75turn)"}}
+    ]
     for(let i = 0; i < snakes.length; i++) {
-        let snake = snakes[i]
-        for (let c = 0; c < snake.length; c++) {
-            setColor(snake[c][0], snake[c][1], color[i])
+        let direction = ''
+        for (let c = 1; c < snakes[i].length - 1; c++) {
+            direction = ''
+            for(let a = -1; a < 2; a++){
+                for(let b = -1; b < 2; b++){
+                    if(Math.abs(snakes[i][c + a][0] - snakes[i][c + b][0]) > 2)
+                        if(snakes[i][c + a][0] < snakes[i][c + b][0])
+                            snakes[i][c + a][0] += boardRow
+                        else
+                            snakes[i][c + b][0] += boardRow
+                    if(Math.abs(snakes[i][c + a][1] - snakes[i][c + b][1]) > 2)
+                        if(snakes[i][c + a][1] < snakes[i][c + b][1])
+                            snakes[i][c + a][1] += boardCol
+                        else
+                            snakes[i][c + b][1] += boardCol
+                }
+            }
+            if(snakes[i][c][0] === snakes[i][c - 1][0]){
+                if(snakes[i][c - 1][1] > snakes[i][c][1]){
+                    direction += '1'
+                } else {
+                    direction += '3'
+                }
+            } else if(snakes[i][c - 1][0] > snakes[i][c][0]) {
+                direction += '2'
+            } else {
+                direction += '0'
+            }
+                if (snakes[i][c][0] === snakes[i][c + 1][0]) {
+                    if (snakes[i][c + 1][1] > snakes[i][c][1]) {
+                        direction += '1'
+                    } else {
+                        direction += '3'
+                    }
+                } else if (snakes[i][c + 1][0] > snakes[i][c][0]) {
+                    direction += '2'
+                } else {
+                    direction += '0'
+                }
+            console.log('direction: ', direction)
+            if(direction[1] < direction[0]){
+                console.log('in if')
+                let temp0 = direction[0]
+                let temp1 = direction[1]
+                direction = temp1 + temp0
+            }
+            console.log('direction: ', direction)
+            for(let a = -1; a < 2; a++){
+                if(snakes[i][c + a][0] >= boardRow)
+                    snakes[i][c + a][0] -= boardRow
+
+                if(snakes[i][c + a][1] >= boardCol)
+                    snakes[i][c + a][1] -= boardCol
+            }
+            let keys = Object.keys(body_parts[i][direction])
+            for(let j = 0; j < keys.length; j++){
+                let key = keys[j]
+                console.log("C: ", c, " of snakes[i] ", i, " with coords ", snakes[i][c], " key: ", key, "property: ", body_parts[i][direction][key])
+                gridItems[coordToStraight(snakes[i][c][0], snakes[i][c][1])].style.setProperty(`${key}`, body_parts[i][direction][key])
+            }
         }
+        if(snakes[i][snakes[i].length - 1][0] === snakes[i][snakes[i].length - 2][0]){
+            if(snakes[i][snakes[i].length - 2][1] > snakes[i][snakes[i].length - 1][1]){
+                direction = 1
+            } else {
+                direction = 3
+            }
+        } else if(snakes[i][snakes[i].length - 2][0] > snakes[i][snakes[i].length - 1][0]) {
+            direction = 2
+        } else {
+            direction = 0
+        }
+        let coord = coordToStraight(snakes[i][snakes[i].length - 1][0], snakes[i][snakes[i].length - 1][1])
+        gridItems[coord].style.setProperty("transform", `rotate(${0.25 * direction}turn)`)
+        gridItems[coord].style.setProperty("background-image", `url(${snake_tail[i]})`)
+        coord = coordToStraight(snakes[i][0][0], snakes[i][0][1])
+        gridItems[coord].style.setProperty("transform", `rotate(${0.25 * snake_direction[i]}turn)`)
+        gridItems[coord].style.setProperty("background-image", `url(${snake_head[i]})`)
     }
     if(gameState.food !== undefined)
         setColor(gameState.food[0], gameState.food[1], foodColor)
@@ -172,11 +260,11 @@ document.addEventListener('keydown', function(event) {
             nextDir = 0
             console.log('Up was pressed');
             break;
-        case "ArrowLeft":
-        case "a":
-        case "A":
+        case "ArrowRight":
+        case "d":
+        case "D":
             nextDir = 1
-            console.log('Left was pressed');
+            console.log('Right was pressed');
             break;
         case "ArrowDown":
         case "s":
@@ -184,11 +272,11 @@ document.addEventListener('keydown', function(event) {
             nextDir = 2
             console.log('Down was pressed');
             break;
-        case "ArrowRight":
-        case "d":
-        case "D":
+        case "ArrowLeft":
+        case "a":
+        case "A":
             nextDir = 3
-            console.log('Right was pressed');
+            console.log('Left was pressed');
             break;
     }
     if(nextDir !== frameDirectionQueue[frameDirectionQueue.length - 1] && nextDir !== -1) {

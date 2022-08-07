@@ -1,5 +1,3 @@
-const winLength = 50
-
 function spawnFood(gameState) {
     let validCoords = false
     let row = 0
@@ -104,12 +102,6 @@ function processGameTurn(broacaster, gameState) {
         gameState.snakes[n].body_coords.unshift(nextHead[n])
 
         if (coordEqual(nextHead[n], gameState.food)) {
-            if(gameState.snakes[n].body_coords.length > winLength) {
-                gameEndObj.push({'winner': 'player 2', 'reason': 'player 2 reached ' + winLength + ' length'})
-                broacaster.emit('game ended', gameEndObj)
-                gameState.gameFinished = true
-                return
-            }
             spawnFood(gameState)
             gameState.foodCounter++
         } else {

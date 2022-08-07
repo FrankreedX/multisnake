@@ -1,5 +1,3 @@
-const winLength = 50
-
 function spawnFood(gameState) {
     let validCoords = false
     let row = 0
@@ -8,13 +6,11 @@ function spawnFood(gameState) {
         while (!validCoords) {
             row = Math.floor(Math.random() * gameState.boardRow)
             col = Math.floor(Math.random() * gameState.boardCol)
-            for (let i = 0; i < gameState.snake1.length; i++) {
-                if (row === gameState.snake1[i][0] && col === gameState.snake1[i][1])
-                    continue mainLoopRow
-            }
-            for (let i = 0; i < gameState.snake2.length; i++) {
-                if (row === gameState.snake2[i][0] && col === gameState.snake2[i][1])
-                    continue mainLoopRow
+            for(let n = 0; n < gameState.snakes.length; n++) {
+                for (let i = 0; i < gameState.snakes[n].body_coords.length; i++) {
+                    if (row === gameState.snakes[n].body_coords[i][0] && col === gameState.snakes[n].body_coords[i][1])
+                        continue mainLoopRow
+                }
             }
             validCoords = true
         }
@@ -53,83 +49,68 @@ function dirToCoord(gameState, direction, coord) {
 }
 
 function processGameTurn(broacaster, gameState) {
-    console.log("directions for frame ", gameState['frame'])
-    console.log("Snake 1's direction: ", gameState.snake1Direction)
-    console.log("Snake 2's direction: ", gameState.snake2Direction)
-    console.log("Snake 1's head: ", gameState.snake1[0])
-    console.log("Snake 2's head: ", gameState.snake2[0])
-    let nextHead1 = dirToCoord(gameState, gameState.snake1Direction, gameState.snake1[0])
-    gameState.receivedInput1 = false
-    let nextHead2 = dirToCoord(gameState, gameState.snake2Direction, gameState.snake2[0])
-    gameState.receivedInput2 = false
-    console.log("Next head 1: ", nextHead1)
-    console.log("Next head 2: ", nextHead2)
+    console.log("directions for frame ", gameState.frame)
+    let nextHead = []
+    for(let n = 0; n < gameState.snakes.length; n++){
+        console.log(`Snake ${n + 1}'s direction: `, gameState.snakes[n].direction)
+        console.log(`Snake ${n + 1}'s head: `, gameState.snakes[n].body_coords[0])
+        nextHead.push(dirToCoord(gameState, gameState.snakes[n].direction, gameState.snakes[n].body_coords[0]))
+        console.log(`Next head ${n + 1}: `, nextHead[n])
+    }
+    console.log('Total nextHead: ', nextHead)
     let gameEndObj = []
-    if (coordEqual(nextHead1, nextHead2)) {
-        gameEndObj.push({'winner': 'tie'})
-        console.log('tie. player 1 and player 2 collided')
+    for(let n = 0; n < gameState.snakes.length - 1; n++){
+        for(let m = n + 1; m < gameState.snakes.length; m++){
+            if (coordEqual(nextHead[n], nextHead[m])) {
+                gameEndObj.push({'winner': 'tie'})
+                console.log('tie. player 1 and player 2 collided')
+                broacaster.emit('game ended', gameEndObj)
+                gameState.gameFinished = true
+                return
+            }
+        }
+    }
+    for(let n = 0; n < gameState.snakes.length; n++){
+        for(let m = 0; m < nextHead.length; m++) {
+            for (let i = 0; i < gameState.snakes[n].body_coords.length; i++) {
+                if (coordEqual(nextHead[m], gameState.snakes[n].body_coords[i])) {
+                    m++
+                    n++
+                    if(m === n) {
+                        gameEndObj.push({'winner': `player ${3 - m}`, 'reason': `player ${m} collided with itself`})
+                        console.log(`player ${3 - m} wins. player ${m} self collided`)
+                    } else {
+                        gameEndObj.push({'winner': `player ${n}`, 'reason': `player ${m} collided with player ${n}`})
+                        console.log(`player ${n} wins. player ${m} collided with player ${n}`)
+                    }
+                    n--
+                    m--
+                }
+            }
+        }
+    }
+    if (gameEndObj.length === 1) {
         broacaster.emit('game ended', gameEndObj)
         gameState.gameFinished = true
         return
-    } else {
-        for (let i = 0; i < gameState.snake1.length; i++) {
-            if (coordEqual(nextHead1, gameState.snake1[i])) {
-                gameEndObj.push({'winner': 'player 2', 'reason': 'player 1 collided with itself'})
-                console.log('player 2 wins. player 1 self collided')
-            }
-            if (coordEqual(nextHead2, gameState.snake1[i])) {
-                gameEndObj.push({'winner': 'player 1', 'reason': 'player 2 collided with player 1'})
-                console.log('player 1 wins. player 2 collided with player 1')
-            }
-        }
-        for (let i = 0; i < gameState.snake2.length; i++) {
-            if (coordEqual(nextHead1, gameState.snake2[i])) {
-                gameEndObj.push({'winner': 'player 2', 'reason': 'player 1 collided with player 2'})
-                console.log('player 2 wins. player 1 collided with player 2')
-            }
-            if (coordEqual(nextHead2, gameState.snake2[i])) {
-                gameEndObj.push({'winner': 'player 1', 'reason': 'player 2 collided with itself'})
-                console.log('player 1 wins. player 2 self collided')
-            }
-        }
-        if (gameEndObj.length === 1) {
-            broacaster.emit('game ended', gameEndObj)
-            gameState.gameFinished = true
-            return
-        }
-        if (gameEndObj.length > 1) {
-            gameEndObj = [{'winner': 'tie'}]
-            console.log('tie. player 1 and player 2 collided at the same time')
-            broacaster.emit('game ended', gameEndObj)
-            gameState.gameFinished = true
-            return
-        }
     }
-    gameState.snake1.unshift(nextHead1)
-    gameState.snake2.unshift(nextHead2)
-    if (coordEqual(nextHead1, gameState.food)) {
-        if(gameState.snake1.length > winLength) {
-            gameEndObj.push({'winner': 'player 1', 'reason': 'player 1 reached ' + winLength + ' length'})
-            broacaster.emit('game ended', gameEndObj)
-            gameState.gameFinished = true
-            return
-        }
-        spawnFood(gameState)
-        gameState.foodCounter++
-    } else {
-        gameState.snake1.pop()
+    if (gameEndObj.length > 1) {
+        gameEndObj = [{'winner': 'tie'}]
+        console.log('tie. player 1 and player 2 collided at the same time')
+        console.log(gameEndObj)
+        broacaster.emit('game ended', gameEndObj)
+        gameState.gameFinished = true
+        return
     }
-    if (coordEqual(nextHead2, gameState.food)) {
-        if(gameState.snake2.length > winLength) {
-            gameEndObj.push({'winner': 'player 2', 'reason': 'player 2 reached ' + winLength + ' length'})
-            broacaster.emit('game ended', gameEndObj)
-            gameState.gameFinished = true
-            return
+    for(let n = 0; n < gameState.snakes.length; n++){
+        gameState.snakes[n].body_coords.unshift(nextHead[n])
+
+        if (coordEqual(nextHead[n], gameState.food)) {
+            spawnFood(gameState)
+            gameState.foodCounter++
+        } else {
+            gameState.snakes[n].body_coords.pop()
         }
-        spawnFood(gameState)
-        gameState.foodCounter++
-    } else {
-        gameState.snake2.pop()
     }
 }
 

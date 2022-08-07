@@ -13,11 +13,20 @@
 <p id="roomid"></p>
 <br>
 <br>
+<input type="text" id="echoText" name="echoText">
+<button type="button" id="echoTest" onclick="echoTest(document.getElementById('echoText').value)">Echo Test</button>
 <br>
 <label for="roomidToJoin">Room ID to join</label>
 <input type="text" id="roomidToJoin" name="roomidToJoin">
-<br>
 <button type="button" id="joinRoom" onclick="joinRoom(document.getElementById('roomidToJoin').value)">Join Room</button>
+<br>
+<label for="debug">Enable debug? </label>
+<input type="checkbox" id="debug" name="debug">
+<br>
+<label for="framerate">New Framerate</label>
+<input type="text" id="framerate" name="framerate">
+<button type="button" id="update-framerate" onclick="updateFramerate(document.getElementById('update-framerate').value)">Update framerate</button>
+<br>
 <button type="button" id="rematchBtn" onclick="rematch()">Rematch</button>
 <p id="countdown">Countdown: </p>
 <p id="foodcount"></p>

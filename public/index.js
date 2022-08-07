@@ -43,8 +43,6 @@ window.onload = async()=>{
 }
 
 let backgroundColor = "black"
-let snake1Color = "Red"
-let snake2Color = "Blue"
 let foodColor = "Green"
 let guideColor = "DimGray"
 
@@ -86,8 +84,8 @@ socket.on('snake update', (game) => {
 
     currentFrame = gameState.frame
     console.log("rendering frame " + gameState.frame)
-    console.log("snake1 head: " + gameState.snake1[0])
-    console.log("snake2 head: " + gameState.snake2[0])
+    console.log("snake1 head: " + gameState.snakes[0].body_coords[0])
+    console.log("snake2 head: " + gameState.snakes[1].body_coords[0])
     renderBoard()
 })
 let currentFrame = 0
@@ -112,18 +110,10 @@ socket.on('get input', (game)=> {
         bufferedDirectionQueue = frameDirectionQueue
     }
     frameDirectionQueue = []
-    let snakeDirection
-    if(socket.id === gameState.player1id){
-        console.log("player1 received direction", gameState.snake1Direction)
-        snakeDirection = gameState.snake1Direction
-    } else{
-        console.log("player2 received direction", gameState.snake2Direction)
-        snakeDirection = gameState.snake2Direction
-    }
+    let snakeDirection = gameState.snakes[gameState.playerIDs.indexOf(socket.id)].direction
     let nextDir = bufferedDirectionQueue.shift()
     console.log("next Dir: ", nextDir)
     if((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2){
-        console.log("changing direction from ", snakeDirection, " to ", nextDir)
         snakeDirection = nextDir
     }
     console.log("Sending direciton ", snakeDirection)
@@ -141,9 +131,8 @@ function renderBoard(){
         gridItems[c].style.setProperty("background-color", backgroundColor)
         gridItems[c].style.removeProperty("background-image")
     }
-    let snakes = [gameState.snake1, gameState.snake2]
-    for(let i = 0; i < 2; i++) {
-        let snake = snakes[i]
+    for(let i = 0; i < gameState.snakes.length; i++) {
+        let snake = gameState.snakes[i].body_coords
         for (let c = 0; c < boardRow; c++) {
             setColor(c, snake[0][1], guideColor)
         }
@@ -151,9 +140,6 @@ function renderBoard(){
             setColor(snake[0][0], c, guideColor)
         }
     }
-    let snake_head = ['Assets/head_snake_red.png', 'Assets/head_snake_blue.png']
-    let snake_tail = ['Assets/tail_red.png', 'Assets/tail_blue.png']
-    let snake_direction = [gameState.snake1Direction, gameState.snake2Direction]
     let body_parts = [{'01': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.25turn)"},
         '02': {"background-image": "url(Assets/body_red.png)"},
         '03': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0turn)"},
@@ -167,42 +153,43 @@ function renderBoard(){
         '13': {"background-image": "url(Assets/body_blue.png)", "transform": "rotate(0.25turn)"},
         '23': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.75turn)"}}
     ]
-    for(let i = 0; i < snakes.length; i++) {
+    for(let i = 0; i < gameState.snakes.length; i++) {
         let direction = ''
-        for (let c = 1; c < snakes[i].length - 1; c++) {
+        let snake = gameState.snakes[i].body_coords
+        for (let c = 1; c < gameState.snakes[i].body_coords.length - 1; c++) {
             direction = ''
             for(let a = -1; a < 2; a++){
                 for(let b = -1; b < 2; b++){
-                    if(Math.abs(snakes[i][c + a][0] - snakes[i][c + b][0]) > 2)
-                        if(snakes[i][c + a][0] < snakes[i][c + b][0])
-                            snakes[i][c + a][0] += boardRow
+                    if(Math.abs(snake[c + a][0] - snake[c + b][0]) > 2)
+                        if(snake[c + a][0] < snake[c + b][0])
+                            snake[c + a][0] += boardRow
                         else
-                            snakes[i][c + b][0] += boardRow
-                    if(Math.abs(snakes[i][c + a][1] - snakes[i][c + b][1]) > 2)
-                        if(snakes[i][c + a][1] < snakes[i][c + b][1])
-                            snakes[i][c + a][1] += boardCol
+                            snake[c + b][0] += boardRow
+                    if(Math.abs(snake[c + a][1] - snake[c + b][1]) > 2)
+                        if(snake[c + a][1] < snake[c + b][1])
+                            snake[c + a][1] += boardCol
                         else
-                            snakes[i][c + b][1] += boardCol
+                            snake[c + b][1] += boardCol
                 }
             }
-            if(snakes[i][c][0] === snakes[i][c - 1][0]){
-                if(snakes[i][c - 1][1] > snakes[i][c][1]){
+            if(snake[c][0] === snake[c - 1][0]){
+                if(snake[c - 1][1] > snake[c][1]){
                     direction += '1'
                 } else {
                     direction += '3'
                 }
-            } else if(snakes[i][c - 1][0] > snakes[i][c][0]) {
+            } else if(snake[c - 1][0] > snake[c][0]) {
                 direction += '2'
             } else {
                 direction += '0'
             }
-                if (snakes[i][c][0] === snakes[i][c + 1][0]) {
-                    if (snakes[i][c + 1][1] > snakes[i][c][1]) {
+                if (snake[c][0] === snake[c + 1][0]) {
+                    if (snake[c + 1][1] > snake[c][1]) {
                         direction += '1'
                     } else {
                         direction += '3'
                     }
-                } else if (snakes[i][c + 1][0] > snakes[i][c][0]) {
+                } else if (snake[c + 1][0] > snake[c][0]) {
                     direction += '2'
                 } else {
                     direction += '0'
@@ -216,36 +203,36 @@ function renderBoard(){
             }
             console.log('direction: ', direction)
             for(let a = -1; a < 2; a++){
-                if(snakes[i][c + a][0] >= boardRow)
-                    snakes[i][c + a][0] -= boardRow
+                if(snake[c + a][0] >= boardRow)
+                    snake[c + a][0] -= boardRow
 
-                if(snakes[i][c + a][1] >= boardCol)
-                    snakes[i][c + a][1] -= boardCol
+                if(snake[c + a][1] >= boardCol)
+                    snake[c + a][1] -= boardCol
             }
             let keys = Object.keys(body_parts[i][direction])
             for(let j = 0; j < keys.length; j++){
                 let key = keys[j]
-                console.log("C: ", c, " of snakes[i] ", i, " with coords ", snakes[i][c], " key: ", key, "property: ", body_parts[i][direction][key])
-                gridItems[coordToStraight(snakes[i][c][0], snakes[i][c][1])].style.setProperty(`${key}`, body_parts[i][direction][key])
+                console.log("C: ", c, " of snake ", i, " with coords ", snake[c], " key: ", key, "property: ", body_parts[i][direction][key])
+                gridItems[coordToStraight(snake[c][0], snake[c][1])].style.setProperty(`${key}`, body_parts[i][direction][key])
             }
         }
-        if(snakes[i][snakes[i].length - 1][0] === snakes[i][snakes[i].length - 2][0]){
-            if(snakes[i][snakes[i].length - 2][1] > snakes[i][snakes[i].length - 1][1]){
+        if(snake[snake.length - 1][0] === snake[snake.length - 2][0]){
+            if(snake[snake.length - 2][1] > snake[snake.length - 1][1]){
                 direction = 1
             } else {
                 direction = 3
             }
-        } else if(snakes[i][snakes[i].length - 2][0] > snakes[i][snakes[i].length - 1][0]) {
+        } else if(snake[snake.length - 2][0] > snake[snake.length - 1][0]) {
             direction = 2
         } else {
             direction = 0
         }
-        let coord = coordToStraight(snakes[i][snakes[i].length - 1][0], snakes[i][snakes[i].length - 1][1])
+        let coord = coordToStraight(snake[snake.length - 1][0], snake[snake.length - 1][1])
         gridItems[coord].style.setProperty("transform", `rotate(${0.25 * direction}turn)`)
-        gridItems[coord].style.setProperty("background-image", `url(${snake_tail[i]})`)
-        coord = coordToStraight(snakes[i][0][0], snakes[i][0][1])
-        gridItems[coord].style.setProperty("transform", `rotate(${0.25 * snake_direction[i]}turn)`)
-        gridItems[coord].style.setProperty("background-image", `url(${snake_head[i]})`)
+        gridItems[coord].style.setProperty("background-image", `url(${gameState.snakes[i].skin_tail[i]})`)
+        coord = coordToStraight(snake[0][0], snake[0][1])
+        gridItems[coord].style.setProperty("transform", `rotate(${0.25 * gameState.snakes[i].direction}turn)`)
+        gridItems[coord].style.setProperty("background-image", `url(${gameState.snakes[i].skin_head[i]})`)
     }
     if(gameState.food !== undefined)
         setColor(gameState.food[0], gameState.food[1], foodColor)

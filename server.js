@@ -12,16 +12,23 @@ let gameStates = new Map()
 
 app.use(express.static('./public'))
 
-// app.get('/', (req, res) => {
-//     res.send()
-// })
-
-function initializeSnakes(gameState){
-    gameState.snake1 = []
-    gameState.snake2 = []
-    for(let i = 0; i < 15; i++){
-        gameState.snake1.unshift([Math.floor(gameState.boardRow / 2 - 5), i])
-        gameState.snake2.unshift([Math.floor(gameState.boardRow / 2 + 5), gameState.boardCol - i - 1])
+function initializeSnakes(gameState) {
+    gameState.snakes = []
+    for (let n = 0; n < 2; n++) {
+        let currentSnake = {
+            'body_coords': [],
+            'direction': n * 2 + 1,
+            'skin_head': ['Assets/head_snake_red.png', 'Assets/head_snake_blue.png'],
+            'skin_body_straight': ['Assets/body_red.png', 'Assets/body_blue.png'],
+            'skin_body_angle': ['Assets/90_degree_turn_red.png', 'Assets/90_degree_turn_blue.png'],
+            'skin_tail': ['Assets/tail_red.png', 'Assets/tail_blue.png'],
+            'received_input': true
+        }
+        gameState.snakes.push(currentSnake)
+    }
+    for (let i = 0; i < 15; i++) {
+        gameState.snakes[0].body_coords.unshift([Math.floor(gameState.boardRow / 2 - 5), i])
+        gameState.snakes[1].body_coords.unshift([Math.floor(gameState.boardRow / 2 + 5), gameState.boardCol - i - 1])
     }
 }
 
@@ -29,10 +36,10 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function startGame(gameState){
+async function startGame(gameState) {
     broadcaster.emit('snake update', gameState)
-    for(let i = 3; i >= 0; i--){
-        if(i !== 0)
+    for (let i = 3; i >= 0; i--) {
+        if (i !== 0)
             broadcaster.emit('initial countdown', i)
         else
             game.spawnFood(gameState)
@@ -53,7 +60,7 @@ io.on('connection', (socket) => {
         socket.emit('echo', message)
     })
 
-    socket.on('getSnake', ()=>{
+    socket.on('getSnake', () => {
         socket.emit('snakeUpdate', gameStates.get(socket.data.roomid))
     })
 
@@ -61,20 +68,16 @@ io.on('connection', (socket) => {
         let gameState = {
             'boardCol': values.boardCol,
             'boardRow': values.boardRow,
-            'player1id': socket.id,
+            'playerIDs': [socket.id],
             'roomid': socket.id,
+            'roomPlayerNum': 2,
             'frame': 0,
             'framerate': 15,
             'debug': values.debugMode,
             'food': [],
             'foodCounter': 0,
-            'snake1': [],
-            'snake1Direction': 1,
-            'snake2': [],
-            'snake2Direction': 3,
+            'snakes': [],
             'gameFinished': false,
-            'receivedInput1': true,
-            'receivedInput2': true
         }
         initializeSnakes(gameState)
         console.log("created room id: ", gameState.roomid)
@@ -91,14 +94,14 @@ io.on('connection', (socket) => {
             socket.emit('room not found')
             return
         }
-        if (gameState.player2id !== undefined && gameState.player2id !== socket.id) {
+        if (gameState.playerIDs.length === gameState.roomPlayerNum) {
             socket.emit('room occupied')
             return
         }
         socket.join(gameState.roomid)
         socket.data.roomid = gameState.roomid
-        gameState['player2id'] = socket.id
-        broadcaster.emit('player 2 joined the room')
+        gameState.playerIDs.unshift(socket.id)
+        broadcaster.emit(`player ${gameState.playerIDs.length} joined the room`)
         startGame(gameState)
     })
 
@@ -110,33 +113,35 @@ io.on('connection', (socket) => {
             return
         }
         console.log("received data ", direction.dir, "from id ", socket.id, " on frame ", direction.frame)
-        if (socket.id === gameState.player1id) {
-            gameState.snake1Direction = direction.dir
-            gameState.receivedInput1 = true
-        } else if (socket.id === gameState.player2id) {
-            gameState.snake2Direction = direction.dir
-            gameState.receivedInput2 = true
-        } else {
+        let snakeIndex = gameState.playerIDs.indexOf(socket.id)
+        if (snakeIndex === -1) {
             socket.emit('not in room')
             return
         }
-        if (gameState.receivedInput1 && gameState.receivedInput2 && !gameState.gameFinished) {
-            gameState.receivedInput1 = false
-            gameState.receivedInput2 = false
-
-            game.play(broadcaster, gameState)
-            broadcaster.emit('snake update', gameState)
-            gameState['frame']++
-            time = new Date() - time
-            console.log("time: ", time)
-            if(!gameState.debug){
-                gameState.framerate = 10 + gameState.foodCounter
-            }
-            console.log("pausing for ", 1000 / gameState.framerate - time)
-            sleep(1000 / gameState.framerate - time).then(() => {
-                broadcaster.emit('get input', gameState)
-            })
+        gameState.snakes[snakeIndex].direction = direction.dir
+        gameState.snakes[snakeIndex].received_input = true
+        for (let i = 0; i < gameState.snakes.length; i++) {
+            if (!gameState.snakes[i].received_input)
+                return
         }
+        console.log("all inputs received")
+
+        for(let i = 0; i < gameState.snakes.length; i++){
+            gameState.snakes[i].received_input = false
+        }
+
+        game.play(broadcaster, gameState)
+        broadcaster.emit('snake update', gameState)
+        gameState.frame++
+        time = new Date() - time
+        console.log("time: ", time)
+        if (!gameState.debug) {
+            gameState.framerate = 10 + gameState.foodCounter
+        }
+        console.log("pausing for ", 1000 / gameState.framerate - time)
+        sleep(1000 / gameState.framerate - time).then(() => {
+            broadcaster.emit('get input', gameState)
+        })
     })
 
     socket.on('updateFramerate', (framerate) => {
@@ -145,7 +150,7 @@ io.on('connection', (socket) => {
             socket.emit('room not found')
             return
         }
-        if(gameState.debug)
+        if (gameState.debug)
             gameState.framerate = framerate
     })
 
@@ -159,10 +164,6 @@ io.on('connection', (socket) => {
         gameState.gameFinished = false
         gameState.food = []
         gameState.foodCounter = 0
-        gameState.snake1 = []
-        gameState.snake2 = []
-        gameState.snake1Direction = 1
-        gameState.snake2Direction = 3
 
         initializeSnakes(gameState)
 
@@ -170,7 +171,7 @@ io.on('connection', (socket) => {
     })
     socket.on('disconnect', () => {
         let gameState = gameStates.get(socket.data.roomid)
-        if(gameState !== undefined) {
+        if (gameState !== undefined) {
             console.log('user disconnected from room ', socket.data.roomid)
             broadcaster.emit('player left room')
             gameState.gameFinished = true

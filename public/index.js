@@ -194,14 +194,14 @@ function renderBoard(){
                 } else {
                     direction += '0'
                 }
-            console.log('direction: ', direction)
+            // console.log('direction: ', direction)
             if(direction[1] < direction[0]){
-                console.log('in if')
+                // console.log('in if')
                 let temp0 = direction[0]
                 let temp1 = direction[1]
                 direction = temp1 + temp0
             }
-            console.log('direction: ', direction)
+            // console.log('direction: ', direction)
             for(let a = -1; a < 2; a++){
                 if(snake[c + a][0] >= boardRow)
                     snake[c + a][0] -= boardRow
@@ -212,7 +212,7 @@ function renderBoard(){
             let keys = Object.keys(body_parts[i][direction])
             for(let j = 0; j < keys.length; j++){
                 let key = keys[j]
-                console.log("C: ", c, " of snake ", i, " with coords ", snake[c], " key: ", key, "property: ", body_parts[i][direction][key])
+                // console.log("C: ", c, " of snake ", i, " with coords ", snake[c], " key: ", key, "property: ", body_parts[i][direction][key])
                 gridItems[coordToStraight(snake[c][0], snake[c][1])].style.setProperty(`${key}`, body_parts[i][direction][key])
             }
         }

@@ -46,7 +46,8 @@ async function startGame(gameState) {
         await sleep(1000)
     }
 
-    gameState['frame'] = 0
+    gameState.frame = 0
+    gameState.gameFinished = false
     console.log("playing state: ", gameState)
     broadcaster.emit('snake update', gameState)
     broadcaster.emit('get input', gameState)
@@ -100,7 +101,7 @@ io.on('connection', (socket) => {
         }
         socket.join(gameState.roomid)
         socket.data.roomid = gameState.roomid
-        gameState.playerIDs.unshift(socket.id)
+        gameState.playerIDs.push(socket.id)
         broadcaster.emit(`player ${gameState.playerIDs.length} joined the room`)
         startGame(gameState)
     })
@@ -110,6 +111,10 @@ io.on('connection', (socket) => {
         let gameState = gameStates.get(socket.data.roomid)
         if (gameState === undefined) {
             socket.emit('room not found')
+            return
+        }
+        if (gameState.gameFinished){
+            socket.emit('game finished')
             return
         }
         console.log("received data ", direction.dir, "from id ", socket.id, " on frame ", direction.frame)
@@ -161,7 +166,7 @@ io.on('connection', (socket) => {
             return
         }
         console.log("rematch requested from room id ", socket.data.roomid)
-        gameState.gameFinished = false
+        gameState.gameFinished = true
         gameState.food = []
         gameState.foodCounter = 0
 

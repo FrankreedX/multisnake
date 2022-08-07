@@ -74,13 +74,17 @@ function processGameTurn(broacaster, gameState) {
         for(let m = 0; m < nextHead.length; m++) {
             for (let i = 0; i < gameState.snakes[n].body_coords.length; i++) {
                 if (coordEqual(nextHead[m], gameState.snakes[n].body_coords[i])) {
+                    m++
+                    n++
                     if(m === n) {
-                        gameEndObj.push({'winner': `player ${2 - m}`, 'reason': `player ${m} collided with itself`})
-                        console.log(`player ${2 - m} wins. player ${m} self collided`)
+                        gameEndObj.push({'winner': `player ${3 - m}`, 'reason': `player ${m} collided with itself`})
+                        console.log(`player ${3 - m} wins. player ${m} self collided`)
                     } else {
-                        gameEndObj.push({'winner': `player ${n + 1}`, 'reason': `player ${m + 1} collided with player ${n}`})
-                        console.log(`player ${n + 1} wins. player ${m + 1} collided with player ${n + 1}`)
+                        gameEndObj.push({'winner': `player ${n}`, 'reason': `player ${m} collided with player ${n}`})
+                        console.log(`player ${n} wins. player ${m} collided with player ${n}`)
                     }
+                    n--
+                    m--
                 }
             }
         }

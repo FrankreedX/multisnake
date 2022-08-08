@@ -44,6 +44,7 @@ window.onload = async()=>{
 
 let backgroundColor = "black"
 let foodColor = "Green"
+let nextFoodColor = "#004000"
 let guideColor = "DimGray"
 
 function createRoom(){
@@ -81,6 +82,14 @@ socket.on('snake update', (game) => {
     foodCount.textContent = "Food count: " + gameState.foodCounter
     if(!debug)
     frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter))
+    let difference = gameState.snakes[1].body_coords.length - gameState.snakes[0].body_coords.length
+    if(difference >= 0){
+        document.getElementById("redAdvBoard").textContent = ''
+        document.getElementById("blueAdvBoard").textContent = '●'.repeat(difference)
+    } else {
+        document.getElementById("blueAdvBoard").textContent = ''
+        document.getElementById("redAdvBoard").textContent = '●'.repeat(-difference)
+    }
 
     currentFrame = gameState.frame
     console.log("rendering frame " + gameState.frame)
@@ -96,7 +105,7 @@ socket.on('initial countdown', async (num) => {
             gridItems[c].style.setProperty("background-color", backgroundColor)
         }
     }
-    if(num === 2){
+    if(num <= 2){
         renderBoard()
     }
     if(num === 0){
@@ -236,6 +245,9 @@ function renderBoard(){
     }
     if(gameState.food !== undefined)
         setColor(gameState.food[0], gameState.food[1], foodColor)
+    if(gameState.nextFood !== undefined) {
+        setColor(gameState.nextFood[0], gameState.nextFood[1], nextFoodColor)
+    }
 }
 
 document.addEventListener('keydown', function(event) {

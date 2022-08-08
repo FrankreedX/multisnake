@@ -39,10 +39,12 @@ function sleep(ms) {
 async function startGame(gameState) {
     broadcaster.emit('snake update', gameState)
     for (let i = 3; i >= 0; i--) {
-        if (i !== 0)
-            broadcaster.emit('initial countdown', i)
-        else
+        if (i === 1) {
             game.spawnFood(gameState)
+            game.shiftFood(gameState)
+            broadcaster.emit('snake update', gameState)
+        }
+        broadcaster.emit('initial countdown', i)
         await sleep(1000)
     }
 
@@ -76,6 +78,7 @@ io.on('connection', (socket) => {
             'framerate': 15,
             'debug': values.debugMode,
             'food': [],
+            'nextFood': [],
             'foodCounter': 0,
             'snakes': [],
             'gameFinished': false,

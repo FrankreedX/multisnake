@@ -3,18 +3,18 @@
     --grid-rows: 1;
 }
 
-#advBoard{
+#advBoard {
     display: inline-flex;
     width: 100%;
     justify-content: center;
     font-size: 5em;
 }
 
-#advBoard p{
+#advBoard p {
     margin: 0;
 }
 
-#redAdvBoard{
+#redAdvBoard {
     color: #b31748;
     text-align: right;
     width: 5em;
@@ -24,7 +24,7 @@
     border-right-style: solid;
 }
 
-#blueAdvBoard{
+#blueAdvBoard {
     color: #0022aa;
     text-align: left;
     width: 5em;
@@ -32,6 +32,11 @@
     border-left-color: black;
     border-left-width: 1px;
     border-left-style: solid;
+}
+
+#scoreboard {
+    display: flex;
+    justify-content: space-around;
 }
 
 #playfield {

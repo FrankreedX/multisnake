@@ -301,6 +301,9 @@ function renderBoard() {
         //HUNTER MODE
         if (gameState.snakes[i].advantage_point === 5) {
             setColor(snake[0][0], snake[0][1], "yellow")
+            for(let j = gameState.snakes[1 - i].body_coords.length - 1; j > gameState.snakes[1 - i].body_coords.length - 5; j--){
+                setColor(gameState.snakes[1 - i].body_coords[j][0], gameState.snakes[1 - i].body_coords[j][1], "yellow")
+            }
         }
     }
     //apply style to food and nextFood

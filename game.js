@@ -81,7 +81,7 @@ function processGameTurn(broadcaster, gameState) {
             for (let m = 0; m < nextHead.length; m++) {
                 for (let i = 0; i < gameState.snakes[n].body_coords.length; i++) {
                     if (coordEqual(nextHead[m], gameState.snakes[n].body_coords[i])) {
-                        if (gameState.snakes[m].advantage_point === 5 && i === gameState.snakes[n].body_coords.length - 1) {
+                        if (gameState.snakes[m].advantage_point === 5 && i > gameState.snakes[n].body_coords.length - 5) {
                             gameEndObj.push({'winner': 3 - m, 'reason': `player ${m + 1} ate player ${n + 1}'s tail`})
                             break collision_loop
                         }

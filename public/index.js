@@ -1,7 +1,3 @@
-let socket = io();
-let roomid;
-let gameState = {'gameFinished': false};
-
 let playfield
 let gridItems
 let countdown
@@ -13,18 +9,8 @@ let player1Score
 let player2Score
 let deuceText
 
-let boardRow = 25
-let boardCol = 50
-
-let frameDirectionQueue = []
-let bufferedDirectionQueue = []
-
 function coordToStraight(row, col) {
     return row * boardCol + col
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 //load dom elements into variables
@@ -57,35 +43,7 @@ let foodColor = "Green"
 let nextFoodColor = "#004000"
 let guideColor = "DimGray"
 
-function createRoom() {
-    socket.emit('createRoom', {'boardCol': boardCol, 'boardRow': boardRow, 'debugMode': debug})
-    document.getElementById('roomid').textContent = "Room created: " + socket.id
-}
-
-function joinRoom(room) {
-    socket.emit('joinRoom', room)
-}
-
-function echoTest(message) {
-    socket.emit('echoTest', message)
-}
-
-function rematch() {
-    socket.emit('rematch')
-}
-
-function updateFramerate(fps) {
-    socket.emit('updateFramerate', fps)
-}
-
-socket.on('room created', (room) => {
-    roomid = room
-})
-
-socket.on('echo', (message) => {
-    console.log('client echoing', message)
-})
-
+//CALLED EVERY FRAME
 socket.on('snake update', (game) => {
     console.log('snake update')
     gameState = game
@@ -107,6 +65,8 @@ socket.on('snake update', (game) => {
     console.log("snake2 head: " + gameState.snakes[1].body_coords[0])
     renderBoard()
 })
+
+//GRAPHICS
 let currentFrame = 0
 socket.on('initial countdown', async (num) => {
     countdown.textContent = "Countdown: " + num
@@ -121,22 +81,6 @@ socket.on('initial countdown', async (num) => {
     if (num === 0) {
         frameDirectionQueue = []
     }
-})
-
-socket.on('get input', (game) => {
-    gameState = game
-    if (frameDirectionQueue.length > 0) {
-        bufferedDirectionQueue = frameDirectionQueue
-    }
-    frameDirectionQueue = []
-    let snakeDirection = gameState.snakes[gameState.playerIDs.indexOf(socket.id)].direction
-    let nextDir = bufferedDirectionQueue.shift()
-    console.log("next Dir: ", nextDir)
-    if ((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2) {
-        snakeDirection = nextDir
-    }
-    console.log("Sending direciton ", snakeDirection)
-    socket.emit('send input', {dir: snakeDirection, frame: gameState.frame})
 })
 
 socket.on('game ended', (winner) => {
@@ -313,40 +257,6 @@ function renderBoard() {
         setColor(gameState.nextFood[0], gameState.nextFood[1], nextFoodColor)
     }
 }
-
-document.addEventListener('keydown', function (event) {
-    let nextDir = -1
-    switch (event.key) {
-        case "ArrowUp":
-        case "w":
-        case "W":
-            nextDir = 0
-            console.log('Up was pressed');
-            break;
-        case "ArrowRight":
-        case "d":
-        case "D":
-            nextDir = 1
-            console.log('Right was pressed');
-            break;
-        case "ArrowDown":
-        case "s":
-        case "S":
-            nextDir = 2
-            console.log('Down was pressed');
-            break;
-        case "ArrowLeft":
-        case "a":
-        case "A":
-            nextDir = 3
-            console.log('Left was pressed');
-            break;
-    }
-    if (nextDir !== frameDirectionQueue[frameDirectionQueue.length - 1] && nextDir !== -1) {
-        frameDirectionQueue.push(nextDir)
-        console.log("frameDirectionQueue: ", frameDirectionQueue)
-    }
-});
 
 function setColor(c0, c1, color) {
     if (gridItems[coordToStraight(c0, c1)] !== undefined)

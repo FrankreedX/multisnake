@@ -6,7 +6,7 @@ function spawnFood(gameState) {
         while (!validCoords) {
             row = Math.floor(Math.random() * gameState.boardRow)
             col = Math.floor(Math.random() * gameState.boardCol)
-            for(let n = 0; n < gameState.snakes.length; n++) {
+            for (let n = 0; n < gameState.snakes.length; n++) {
                 for (let i = 0; i < gameState.snakes[n].body_coords.length; i++) {
                     if (row === gameState.snakes[n].body_coords[i][0] && col === gameState.snakes[n].body_coords[i][1])
                         continue mainLoopRow
@@ -14,7 +14,12 @@ function spawnFood(gameState) {
             }
             validCoords = true
         }
-    gameState.food = [row, col]
+    gameState.nextFood = [row, col]
+}
+
+function shiftFood(gameState) {
+    gameState.food = gameState.nextFood
+    spawnFood(gameState)
 }
 
 function coordEqual(coord1, coord2) {
@@ -48,67 +53,84 @@ function dirToCoord(gameState, direction, coord) {
     return coordinate
 }
 
-function processGameTurn(broacaster, gameState) {
+function processGameTurn(broadcaster, gameState) {
     console.log("directions for frame ", gameState.frame)
     let nextHead = []
-    for(let n = 0; n < gameState.snakes.length; n++){
+    for (let n = 0; n < gameState.snakes.length; n++) {
         console.log(`Snake ${n + 1}'s direction: `, gameState.snakes[n].direction)
         console.log(`Snake ${n + 1}'s head: `, gameState.snakes[n].body_coords[0])
         nextHead.push(dirToCoord(gameState, gameState.snakes[n].direction, gameState.snakes[n].body_coords[0]))
         console.log(`Next head ${n + 1}: `, nextHead[n])
     }
-    console.log('Total nextHead: ', nextHead)
+    console.log('Food: ', gameState.food)
+    console.log('nextFood: ', gameState.nextFood)
     let gameEndObj = []
-    for(let n = 0; n < gameState.snakes.length - 1; n++){
-        for(let m = n + 1; m < gameState.snakes.length; m++){
+    for (let n = 0; n < gameState.snakes.length - 1; n++) {
+        for (let m = n + 1; m < gameState.snakes.length; m++) {
             if (coordEqual(nextHead[n], nextHead[m])) {
-                gameEndObj.push({'winner': 'tie'})
+                gameEndObj.push({'winner': 0})
                 console.log('tie. player 1 and player 2 collided')
-                broacaster.emit('game ended', gameEndObj)
+                broadcaster.emit('game ended', gameEndObj)
                 gameState.gameFinished = true
                 return
             }
         }
     }
-    for(let n = 0; n < gameState.snakes.length; n++){
-        for(let m = 0; m < nextHead.length; m++) {
-            for (let i = 0; i < gameState.snakes[n].body_coords.length; i++) {
-                if (coordEqual(nextHead[m], gameState.snakes[n].body_coords[i])) {
-                    m++
-                    n++
-                    if(m === n) {
-                        gameEndObj.push({'winner': `player ${3 - m}`, 'reason': `player ${m} collided with itself`})
-                        console.log(`player ${3 - m} wins. player ${m} self collided`)
-                    } else {
-                        gameEndObj.push({'winner': `player ${n}`, 'reason': `player ${m} collided with player ${n}`})
-                        console.log(`player ${n} wins. player ${m} collided with player ${n}`)
+    collision_loop:
+        for (let n = 0; n < gameState.snakes.length; n++) {
+            for (let m = 0; m < nextHead.length; m++) {
+                for (let i = 0; i < gameState.snakes[n].body_coords.length; i++) {
+                    if (coordEqual(nextHead[m], gameState.snakes[n].body_coords[i])) {
+                        if (gameState.snakes[m].advantage_point === 5 && i > gameState.snakes[n].body_coords.length - 5) {
+                            gameEndObj.push({'winner': 3 - m, 'reason': `player ${m + 1} ate player ${n + 1}'s tail`})
+                            break collision_loop
+                        }
+                        m++
+                        n++
+                        if (m === n) {
+                            gameEndObj.push({'winner': 3 - m, 'reason': `player ${m} collided with itself`})
+                            console.log(`player ${3 - m} wins. player ${m} self collided`)
+                        } else {
+                            gameEndObj.push({'winner': n, 'reason': `player ${m} collided with player ${n}`})
+                            console.log(`player ${n} wins. player ${m} collided with player ${n}`)
+                        }
+                        n--
+                        m--
+                        break collision_loop
                     }
-                    n--
-                    m--
                 }
             }
         }
-    }
     if (gameEndObj.length === 1) {
-        broacaster.emit('game ended', gameEndObj)
+        broadcaster.emit('game ended', gameEndObj)
         gameState.gameFinished = true
+        gameState.snakes[gameEndObj[0].winner - 1].game_score++
+        if (gameState.snakes[gameEndObj[0].winner - 1].advantage_point === 5)
+            gameState.snakes[gameEndObj[0].winner - 1].game_score++
         return
     }
     if (gameEndObj.length > 1) {
-        gameEndObj = [{'winner': 'tie'}]
+        gameEndObj = [{'winner': 0, 'reason': 'player 1 and player 2 collided at the same time'}]
         console.log('tie. player 1 and player 2 collided at the same time')
         console.log(gameEndObj)
-        broacaster.emit('game ended', gameEndObj)
+        broadcaster.emit('game ended', gameEndObj)
         gameState.gameFinished = true
         return
     }
-    for(let n = 0; n < gameState.snakes.length; n++){
+    for (let n = 0; n < gameState.snakes.length; n++) {
         gameState.snakes[n].body_coords.unshift(nextHead[n])
 
         if (coordEqual(nextHead[n], gameState.food)) {
-            spawnFood(gameState)
+            shiftFood(gameState)
             gameState.foodCounter++
+            if (gameState.snakes[1 - n].advantage_point > 0)
+                gameState.snakes[1 - n].advantage_point--
+            else if (gameState.snakes[n].advantage_point < 5)
+                gameState.snakes[n].advantage_point++
         } else {
+            if (coordEqual(nextHead[n], gameState.nextFood)) {
+                spawnFood(gameState)
+            }
             gameState.snakes[n].body_coords.pop()
         }
     }
@@ -116,5 +138,6 @@ function processGameTurn(broacaster, gameState) {
 
 module.exports = {
     spawnFood: spawnFood,
+    shiftFood: shiftFood,
     play: processGameTurn,
 }

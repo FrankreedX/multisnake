@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Menu</title>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
     <script src="index.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -25,14 +26,24 @@
 <br>
 <label for="framerate">New Framerate</label>
 <input type="text" id="framerate" name="framerate">
-<button type="button" id="update-framerate" onclick="updateFramerate(document.getElementById('update-framerate').value)">Update framerate</button>
+<button type="button" id="update-framerate"
+        onclick="updateFramerate(document.getElementById('update-framerate').value)">Update framerate
+</button>
 <br>
 <button type="button" id="rematchBtn" onclick="rematch()">Rematch</button>
 <p id="countdown">Countdown: </p>
 <p id="foodcount"></p>
 <p id="frames"></p>
 <p id="gameEnd"></p>
-<div id="playfield">
+<div id="advBoard">
+    <p id="redAdvBoard"></p>
+    <p id="blueAdvBoard"></p>
 </div>
+<div id="scoreboard">
+    <p id="player1Score">0</p>
+    <p id="deuceText"></p>
+    <p id="player2Score">0</p>
+</div>
+<div id="playfield"></div>
 </body>
 </html>

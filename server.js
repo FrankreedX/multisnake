@@ -12,7 +12,17 @@ let gameStates = new Map()
 
 app.use(express.static('./public'))
 
-function initializeSnakes(gameState) {
+function resetGame(gameState) {
+    gameState.gameFinished = true
+    gameState.food = []
+    gameState.nextFood = []
+    gameState.foodCounter = 0
+    let game_score = []
+    for (let n = 0; n < 2; n++) {
+        game_score.push(0)
+        if (!gameState.matchFinished && gameState.snakes[n] !== undefined)
+            game_score[n] = gameState.snakes[n].game_score
+    }
     gameState.snakes = []
     for (let n = 0; n < 2; n++) {
         let currentSnake = {
@@ -22,13 +32,19 @@ function initializeSnakes(gameState) {
             'skin_body_straight': ['Assets/body_red.png', 'Assets/body_blue.png'],
             'skin_body_angle': ['Assets/90_degree_turn_red.png', 'Assets/90_degree_turn_blue.png'],
             'skin_tail': ['Assets/tail_red.png', 'Assets/tail_blue.png'],
-            'received_input': true
+            'received_input': true,
+            'advantage_point': 0,
+            'game_score': game_score[n]
         }
         gameState.snakes.push(currentSnake)
     }
     for (let i = 0; i < 15; i++) {
         gameState.snakes[0].body_coords.unshift([Math.floor(gameState.boardRow / 2 - 5), i])
         gameState.snakes[1].body_coords.unshift([Math.floor(gameState.boardRow / 2 + 5), gameState.boardCol - i - 1])
+    }
+    if (gameState.matchFinished) {
+        gameState.deuce = false
+        gameState.matchFinished = false
     }
 }
 
@@ -38,11 +54,14 @@ function sleep(ms) {
 
 async function startGame(gameState) {
     broadcaster.emit('snake update', gameState)
+    broadcaster.emit('game score', gameState)
+    game.spawnFood(gameState)
+    game.shiftFood(gameState)
     for (let i = 3; i >= 0; i--) {
-        if (i !== 0)
-            broadcaster.emit('initial countdown', i)
-        else
-            game.spawnFood(gameState)
+        if (i === 1) {
+            broadcaster.emit('snake update', gameState)
+        }
+        broadcaster.emit('initial countdown', i)
         await sleep(1000)
     }
 
@@ -76,11 +95,14 @@ io.on('connection', (socket) => {
             'framerate': 15,
             'debug': values.debugMode,
             'food': [],
+            'nextFood': [],
             'foodCounter': 0,
             'snakes': [],
             'gameFinished': false,
+            'deuce': false,
+            'matchFinished': false
         }
-        initializeSnakes(gameState)
+        resetGame(gameState)
         console.log("created room id: ", gameState.roomid)
         socket.data.roomid = socket.id
         broadcaster = io.to(gameState.roomid)
@@ -113,8 +135,34 @@ io.on('connection', (socket) => {
             socket.emit('room not found')
             return
         }
-        if (gameState.gameFinished){
-            socket.emit('game finished')
+        if (gameState.gameFinished) {
+            broadcaster.emit('game score', gameState)
+            if (gameState.snakes[0].game_score === 6 && gameState.snakes[1].game_score === 6)
+                gameState.deuce = true
+            if (gameState.deuce) {
+                if (gameState.snakes[0].game_score - gameState.snakes[1].game_score > 1) {
+                    broadcaster.emit('match ended', {'winner': 1})
+                    gameState.matchFinished = true
+                } else if (gameState.snakes[1].game_score - gameState.snakes[0].game_score > 1) {
+                    broadcaster.emit('match ended', {'winner': 2})
+                    gameState.matchFinished = true
+                }
+            } else {
+                if (gameState.snakes[0].game_score > 6) {
+                    broadcaster.emit('match ended', {'winner': 1})
+                    gameState.matchFinished = true
+                } else if (gameState.snakes[1].game_score > 6) {
+                    broadcaster.emit('match ended', {'winner': 2})
+                    gameState.matchFinished = true
+                }
+            }
+            if (!gameState.matchFinished && gameState.nextFood.length > 0) {
+                resetGame(gameState)
+                sleep(2000).then(() => {
+                        startGame(gameState)
+                    }
+                )
+            }
             return
         }
         console.log("received data ", direction.dir, "from id ", socket.id, " on frame ", direction.frame)
@@ -131,7 +179,7 @@ io.on('connection', (socket) => {
         }
         console.log("all inputs received")
 
-        for(let i = 0; i < gameState.snakes.length; i++){
+        for (let i = 0; i < gameState.snakes.length; i++) {
             gameState.snakes[i].received_input = false
         }
 
@@ -166,12 +214,8 @@ io.on('connection', (socket) => {
             return
         }
         console.log("rematch requested from room id ", socket.data.roomid)
-        gameState.gameFinished = true
-        gameState.food = []
-        gameState.foodCounter = 0
 
-        initializeSnakes(gameState)
-
+        resetGame(gameState)
         startGame(gameState)
     })
     socket.on('disconnect', () => {

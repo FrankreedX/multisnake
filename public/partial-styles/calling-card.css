@@ -1,0 +1,48 @@
+.calling-card{
+    position: relative;
+    top: 20%;
+    width: 12rem;
+}
+
+.title{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    height: 3rem;
+    font-family: axia, sans-serif;
+    font-weight: 900;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.name{
+    transform: translateY(0.5rem);
+}
+
+.badge{
+    height: 100%;
+    width: auto;
+}
+
+.elo-flair{
+    font-family: new-hero, sans-serif;
+    font-weight: 300;
+    font-size: 1rem;
+    transform: translateY(-2.2rem) rotate(-90deg);
+    margin-left: 1rem;
+}
+
+.stats{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;;
+    width: 100%;
+    height: 2rem;
+    font-family: new-hero, sans-serif;
+    font-weight: regular;
+    color: white;
+    background-color: black;
+}

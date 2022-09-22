@@ -1,0 +1,50 @@
+#main-menu{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 22rem;
+    height: 75%;
+    gap: 1rem;
+}
+
+#main-menu button{
+    font-family: axia, sans-serif;
+    font-weight: 900;
+    border: none;
+    color: white;
+    background-color: #dd2626;
+    transition: ease-in-out 0.1s;
+}
+
+#main-menu button:hover{
+    background-color: black;
+}
+
+#create-room-button{
+    width: 100%;
+    height: 4rem;
+    font-size: 2rem;
+}
+
+#join-room-container{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 3rem;
+    gap: 1rem;
+}
+
+#join-room-button{
+    width: 30%;
+    font-size: 1rem;
+}
+
+#id-reciver{
+    width: 70%;
+    vertical-align: middle;
+    text-align: center;
+    font-family: new-hero, sans-serif;
+    font-weight: regular;
+    border: none;
+    background-color: #e6e6e6;
+}

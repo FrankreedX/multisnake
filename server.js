@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const exphbs = require('express-handlebars')
 const http = require('http')
 const server = http.createServer(app);
 
@@ -10,7 +11,15 @@ const game = require('./game.js')
 let broadcaster
 let gameStates = new Map()
 
-app.use(express.static('./public'))
+app.engine('handlebars', exphbs.engine({ defaultLayout: 'main' }));
+app.set('view engine', 'handlebars')
+// app.set('views', './views')
+
+app.use(express.static('public'))
+
+app.get('/', (req, res) => {
+    res.render('index');
+});
 
 function resetGame(gameState) {
     gameState.gameFinished = true

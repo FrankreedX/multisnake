@@ -4,13 +4,18 @@
   "description": "Competitive snake",
   "main": "server.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build-callingCard": "handlebars views/partials/callingCard.handlebars -f public/precomps/callingCard.precompiled.js",
+    "build-mainMenu": "handlebars views/partials/mainMenu.handlebars -f public/precomps/mainMenu.precompiled.js",
+    "build-gameArea": "handlebars views/partials/gameArea.handlebars -f public/precomps/gameArea.precompiled.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.1",
+    "express-handlebars": "^6.0.6",
+    "handlebars": "^4.7.7",
     "socket.io": "^4.5.1"
   },
   "devDependencies": {

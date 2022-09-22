@@ -5,16 +5,21 @@ let gameState = {'gameFinished': false};
 let frameDirectionQueue = []
 let bufferedDirectionQueue = []
 
-let boardRow = 25
-let boardCol = 50
+let boardRow = 20
+let boardCol = 20
+
+
+$(function() { //executes once dom is loaded
+    
+});
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
+ 
 function createRoom() {
     socket.emit('createRoom', {'boardCol': boardCol, 'boardRow': boardRow, 'debugMode': debug})
-    document.getElementById('roomid').textContent = "Room created: " + socket.id
+    // document.getElementById('roomid').textContent = "Room created: " + socket.id
 }
 
 function joinRoom(room) {

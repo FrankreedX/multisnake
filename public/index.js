@@ -1,3 +1,4 @@
+//Frank's Variabls
 let playfield
 let gridItems
 let countdown
@@ -9,35 +10,192 @@ let player1Score
 let player2Score
 let deuceText
 
+// What do?
 function coordToStraight(row, col) {
     return row * boardCol + col
 }
 
-//load dom elements into variables
-window.onload = async () => {
-    playfield = document.getElementById("playfield");
-    gridItems = playfield.getElementsByClassName("grid-item");
-    countdown = document.getElementById("countdown");
-    foodCount = document.getElementById("foodcount")
-    frames = document.getElementById("frames")
-    debug = document.getElementById("debug").value
-    gameEnd = document.getElementById("gameEnd")
-    player1Score = document.getElementById("player1Score")
-    player2Score = document.getElementById("player2Score")
-    deuceText = document.getElementById("deuceText")
+//Connor's Variables
+let aspectRatio
+let domCanvas
+let canvas
 
-    //tell CSS the dimension of the gameboard so it can line them up
-    playfield.style.setProperty('--grid-rows', boardRow.toString());
-    playfield.style.setProperty('--grid-cols', boardCol.toString());
-    //spawn divs and color them
-    for (let c = 0; c < boardRow * boardCol; c++) {
-        let cell = document.createElement("div");
-        cell.style.setProperty("background-color", "black")
-        cell.className = "grid-item"
-        playfield.appendChild(cell);
+window.onload = async () => {
+    //+++ OLD CODE +++
+    //load dom elements into variables
+    // playfield = document.getElementById("playfield");
+    // gridItems = playfield.getElementsByClassName("grid-item");
+    // countdown = document.getElementById("countdown");
+    // foodCount = document.getElementById("foodcount")
+    // frames = document.getElementById("frames")
+    // debug = document.getElementById("debug").value
+    // gameEnd = document.getElementById("gameEnd")
+    // player1Score = document.getElementById("player1Score")
+    // player2Score = document.getElementById("player2Score")
+    // deuceText = document.getElementById("deuceText")
+
+    // //tell CSS the dimension of the gameboard so it can line them up
+    // playfield.style.setProperty('--grid-rows', boardRow.toString());
+    // playfield.style.setProperty('--grid-cols', boardCol.toString());
+    // //spawn divs and color them
+    // for (let c = 0; c < boardRow * boardCol; c++) {
+    //     let cell = document.createElement("div");
+    //     cell.style.setProperty("background-color", "black")
+    //     cell.className = "grid-item"
+    //     playfield.appendChild(cell);
+    // }
+}
+
+$(function() { //executes once dom is loaded
+    updateUiState("main menu")
+
+    //click listeners
+    $('#create-room-button').on("click", function(){
+        updateUiState("game")
+        createRoom()
+    })
+    //socket listeners
+
+    // housekeeping functions
+    // window.resize repeats will eventually be consolidated
+    updateAspectRatio()
+    formatBanner()
+    scaleStage()
+
+    $(window).resize(function(){
+        updateAspectRatio()
+        formatBanner()
+        scaleStage()
+        if($('#canvas')){
+            drawGrid()
+        }
+    })
+});
+
+//Page Layout Scripts
+
+// ===== Update UI state =====
+// changes page layout based on newState pass in
+function updateUiState(newState){
+    $('#left').empty()
+    $('#center').empty()
+    $('#right').empty()
+    switch(newState){
+        case "main menu":
+            $('#logo').height("5rem")
+            $('#left').append(createCallingCard("clement", 1.2, 1020))
+            $('#right').append(createCallingCard("Leader Board", "place", "holder"))
+            $('#center').append(createMainMenu())
+            domCanvas = null
+            canvas = null
+            break
+        case "game":
+            $('#logo').height("3rem")
+            $('#left').append(createCallingCard("clement", 1.2, 1020))
+            $('#center').append(createGameArea())
+            $('#right').append(createCallingCard("frank", 1.4, 1134))
+            
+            console.log(socket.id)
+            $('#room-id').val(socket.id)
+
+            domCanvas = $('#canvas')[0]
+            canvas = domCanvas.getContext('2d')
+            drawGrid()
+            break
+        default:
+    }
+    scaleStage();
+}
+
+function drawGrid(){
+    let containerHeight = $('#canvas-container').height();
+    $(domCanvas).attr("height", containerHeight);
+    $(domCanvas).attr("width", containerHeight);
+
+    console.log(boardRow)
+    console.log(boardCol)
+
+    let square = domCanvas.width / boardRow;
+
+    canvas.fillStyle = "#FFFFFF";
+    canvas.fillRect(0, 0, containerHeight, containerHeight);
+    canvas.strokeStyle = "#d9d9d9";
+    for(let y = 0; y < boardRow; y++){
+        for(let x = 0; x < boardCol; x++){
+            console.log(x*square);
+            canvas.strokeRect(x*square, y*square, square, square);
+        }
     }
 }
 
+// ===== Scale Stage =====
+// scales the stage div, ie the middle row
+// based on the height of the header and footer.
+//make right stage same width as left stage
+function scaleStage(){
+    let headerHeight = $('#header').height()
+    let footerHeight = $('#footer').height()
+    let stageHeight = window.innerHeight - headerHeight - footerHeight
+    $('#stage').height(stageHeight)
+
+    // if($('#canvas-container')[0]){
+    //     newCanvasHeight = $('#canvas-container').width()
+    //     console.log("new height:", newCanvasHeight);
+    //     $('#canvas-container').height(newCanvasHeight)
+    // }
+}
+
+// ===== Update Aspect Ratio =====
+// updates the aspectRatio global variable
+// based on windo width and height
+function updateAspectRatio(){
+    aspectRatio = window.innerWidth / window.innerHeight
+    console.log(aspectRatio)
+}
+
+// ===== Format Banner =====
+//updates banner padding based on logo height
+function formatBanner(){
+    let logoHeight = $('#logo').height();
+    $('#banner').css('padding-top', logoHeight * 0.30)
+    $('#banner').css('padding-bottom', logoHeight * 0.30)
+}
+
+// ++++++++++++++++++++++++++++++++
+// ===== TEMPLATING FUNCTIONS =====
+// ++++++++++++++++++++++++++++++++
+
+// ===== Create Main Menu =====
+// OUTPUT: returns main menu HTML template
+function createMainMenu(){
+    let newMainMenu = Handlebars.templates.mainMenu()
+    // console.log(newMainMenu)
+    return newMainMenu
+}
+
+// ===== Create Calling Card =====
+// INPUT: player name, win loss ratio, elo ranking
+// OUTPUT: returns calling car HTML template
+function createCallingCard(name, wlr, elo){
+    var context = {
+        name: name,
+        wlr: wlr,
+        elo: elo
+    }
+    let newCallingCard = Handlebars.templates.callingCard(context) //callingCard(context)
+    // console.log(newCallingCard)
+    return newCallingCard
+}
+
+// ===== Create Game Area =====
+// OUTPUT: returns game area HTML template
+function createGameArea(){
+    let newGameArea = Handlebars.templates.gameArea()
+    // console.log(newGameArea)
+    return newGameArea
+}
+
+//Franks Code
 let backgroundColor = "black"
 let foodColor = "Green"
 let nextFoodColor = "#004000"

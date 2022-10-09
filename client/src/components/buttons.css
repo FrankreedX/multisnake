@@ -1,0 +1,49 @@
+button{
+    background: none;
+    border: none;
+    transition: ease-in-out 0.15s;
+}
+
+.header-button{
+    height: 2rem;
+}
+
+.header-button:hover{
+    transform: scale(1.2);
+}
+
+.large-button{
+    border-radius: var(--borderRadius);
+    background-color: var(--snakeRed);
+    font-family: Axia;
+    font-weight: 900;
+    color: var(--snakeWhite);
+}
+
+.large-button:hover{
+    transform: scale(1.02);
+    background-color: var(--snakeBlack);
+}
+
+.login-button{
+    width: 20rem;
+    height: 4rem;
+    font-size: 2rem;
+}
+
+.matchmake-button{
+    width: 16rem;
+    height: 4rem;
+    font-size: 2.5rem;
+}
+
+.copy-button{
+    border-radius: 0 var(--borderRadius) var(--borderRadius) 0;
+    height: 3rem;
+    width: 3rem;
+    background-color: var(--snakeRed);
+}
+
+.copy-button:hover{
+    background-color: var(--snakeBlack);
+}

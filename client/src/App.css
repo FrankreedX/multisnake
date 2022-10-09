@@ -1,0 +1,165 @@
+/* ===== APP ===== */
+
+@import url("https://use.typekit.net/ddg4kzp.css");
+
+:root {
+  --snakeRed: #dd2626;
+  --snakeBlue: #2a4ae8;
+  --snakeBlack: black;
+  --snakeWhite: white;
+  --snakeGray: #e6e6e6;
+
+  --borderRadius: 0rem;
+}
+
+*{
+  box-sizing: border-box;
+}
+
+body{
+  margin: 0;
+}
+
+img{
+  width: 100%;
+  height: 100%;
+}
+
+p{
+  font-family: new-hero, sans-serif;
+  font-weight: 300;
+  margin: 0;
+}
+
+input{
+  border-radius: 0;
+  border: none;
+  background-color: var(--snakeGray);
+  font-family: new-hero, sans-serif;
+  font-weight: 400;
+}
+
+.left{
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 3rem;
+}
+
+.center{
+  position: relative;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.right{
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-right: 3rem;
+}
+
+/* ===== HEADER ===== */
+#header{
+  width: 100%;
+  height: 7rem;
+  padding: 2rem 3rem 1rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: ease-in-out 0.3s;
+}
+
+#logo{
+  height: 100%;
+}
+
+#header-ui-container{
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* ===== FOOTER ===== */
+
+#footer{
+  width: 100%;
+  height: 4rem;
+  display: flex;
+  color: var(--snakeBlack);
+  background-color: var(--snakeWhite);
+}
+
+/* ===== ROOMID ===== */
+#room-id{
+  display: flex;
+  justify-content: center;
+  margin-top: 15rem;
+}
+
+.copy-input{
+  margin-right: 0.5rem;
+  text-align: center;
+  height: 3rem;
+  width: 15rem;
+}
+
+/* ===== CANVAS ===== */
+
+#canvas-container{
+  width: 40rem;
+  height: 40rem;
+  border: solid 1rem var(--snakeBlack);
+}
+
+#canvas{
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== LOGIN ===== */
+
+#login{
+  position: relative;
+  height: 100%;
+  display:flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-menu{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 12vh;
+  gap: 1rem;
+}
+
+/* ===== HOME ===== */
+#home{
+  position: relative;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#home-menu{
+  padding-bottom: 10vh;
+}
+
+/* ===== GAME ===== */
+
+#game{
+  position: relative;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

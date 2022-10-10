@@ -205,7 +205,7 @@ let guideColor = "DimGray"
 socket.on('snake update', (game) => {
     console.log('snake update')
     gameState = game
-    foodCount.textContent = "Food count: " + gameState.foodCounter
+    foodCount.textContent = "Food cojgunt: " + gameState.foodCounter
     if (!debug)
         frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter))
     let difference = gameState.snakes[1].advantage_point - gameState.snakes[0].advantage_point

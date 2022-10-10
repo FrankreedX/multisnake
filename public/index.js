@@ -53,6 +53,7 @@ $(function() { //executes once dom is loaded
     $('#create-room-button').on("click", function(){
         updateUiState("game")
         createRoom()
+        drawGrid()
     })
     //socket listeners
 
@@ -108,9 +109,13 @@ function updateUiState(newState){
 }
 
 function drawGrid(){
+    console.log("start draw grid")
     let containerHeight = $('#canvas-container').height();
     $(domCanvas).attr("height", containerHeight);
     $(domCanvas).attr("width", containerHeight);
+    console.log("container height: ", containerHeight)
+    console.log("dom height", $(domCanvas).attr("height"))
+    console.log("dom width", $(domCanvas).attr("width"))
 
     console.log(boardRow)
     console.log(boardCol)
@@ -122,10 +127,11 @@ function drawGrid(){
     canvas.strokeStyle = "#d9d9d9";
     for(let y = 0; y < boardRow; y++){
         for(let x = 0; x < boardCol; x++){
-            console.log(x*square);
+            // console.log(x*square);
             canvas.strokeRect(x*square, y*square, square, square);
         }
     }
+    console.log("dom width", $(domCanvas).attr("width"))
 }
 
 // ===== Scale Stage =====
@@ -205,7 +211,7 @@ let guideColor = "DimGray"
 socket.on('snake update', (game) => {
     console.log('snake update')
     gameState = game
-    foodCount.textContent = "Food cojgunt: " + gameState.foodCounter
+    foodCount.textContent = "Food count: " + gameState.foodCounter
     if (!debug)
         frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter))
     let difference = gameState.snakes[1].advantage_point - gameState.snakes[0].advantage_point

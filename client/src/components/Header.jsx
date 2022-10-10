@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import { useLocation } from 'react-router-dom';
 
 //components
@@ -13,25 +13,29 @@ import emailIcon from '../assets/icons/email-icon.svg'
 const Header = (props) => {
 
     const location = useLocation();
+    const [headerStyle, setHeaderStyle] = useState({
+        height: "7rem",
+        padding: "2rem 3rem 1rem 3rem"
+    })
 
-    console.log(location.pathname)
+    useEffect(()=>{
+        if(location.pathname === "/game"){
+            setHeaderStyle({
+                height: "4.5rem",
+                padding: "1rem 3rem 1rem 3rem"
+            })
+        }else{
+            setHeaderStyle({
+                height: "7rem",
+                padding: "2rem 3rem 1rem 3rem"
+            })
+        }
+    }, [location])
 
-    let headerHeight;
-    let headerPadding;
 
-    if(location.pathname === "/game"){
-        headerHeight = "5rem";
-        headerPadding= "1rem 3rem 1rem 3rem";
-
-    }else{
-        headerHeight = "7rem";
-        headerPadding= "2rem 3rem 1rem 3rem";
-    }
-
-    // props.updateHeaderHeight()
 
     return (
-        <div id="header" style={{height: headerHeight, padding: headerPadding}}>
+        <div id="header" style={{height: headerStyle.height, padding: headerStyle.padding}}>
             <div id="logo">
                 <img src={logo} alt="multisnake logo" />
             </div>

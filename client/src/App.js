@@ -1,6 +1,5 @@
 //dependencies
-import React, { useEffect } from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 
 //styles
@@ -29,36 +28,24 @@ function App() {
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
-    headerHeight: 0,
-    footerHeight: 0,
-    mainBodyHeight: 0
+    headerHeight: null,
+    footerHeight: null,
+    mainBodyHeight: null
   })
 
   // resize components based on window dimensions
   useEffect(() => {
-    function handleResize() {
-      let newHeaderHeight = document.getElementById("header").offsetHeight;
-      let newFooterHeight = document.getElementById("footer").offsetHeight;
-
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-        headerHeight: newHeaderHeight,
-        footerHeight: newFooterHeight,
-        mainBodyHeight: window.innerHeight - newHeaderHeight - newFooterHeight
-      })
-    }
     window.addEventListener('load', handleResize);
     window.addEventListener('resize', handleResize);
     return _ => {
       window.removeEventListener('load', handleResize)
       window.removeEventListener('resize', handleResize)
     }
-  }, [])
+  }, []);
 
   return (
     <div className="app" style={{height: dimensions.height}}>
-      <Header />
+      <Header onChange={handleResize}/>
       <div id="main-body" style={{height: dimensions.mainBodyHeight}}>
         <Routes>
           <Route path="/" element={<Login />} />
@@ -71,6 +58,19 @@ function App() {
       <Footer />
     </div>
   );
+
+  function handleResize() {
+    let newHeaderHeight = document.getElementById("header").offsetHeight;
+    let newFooterHeight = document.getElementById("footer").offsetHeight;
+
+    setDimensions({
+      width: window.innerWidth,
+      height: window.innerHeight,
+      headerHeight: newHeaderHeight,
+      footerHeight: newFooterHeight,
+      mainBodyHeight: window.innerHeight - newHeaderHeight - newFooterHeight
+    })
+  }
 }
 
 export default App;

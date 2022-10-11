@@ -49,7 +49,7 @@ function App() {
 
   return (
     <div className="app" style={{height: dimensions.height}}>
-      <Header onChange={handleResize}/>
+      <Header />
       <div id="main-body" style={{height: dimensions.mainBodyHeight}}>
         <Routes>
           <Route path="/" element={<Login />} />
@@ -64,11 +64,11 @@ function App() {
   );
 
   function handleResize() {
+
     console.log("handling resizing inside")
     let newHeaderHeight = document.getElementById("header").offsetHeight;
     let newFooterHeight = document.getElementById("footer").offsetHeight;
 
-    console.log(setDimensions)
     setDimensions({
       width: window.innerWidth,
       height: window.innerHeight,

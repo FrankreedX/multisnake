@@ -3,10 +3,13 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    margin-bottom: 1rem;
 }
 
 #score-status{
-    height: 6rem;
+    height: 2rem;
+    display: flex;
+    align-items: flex-end;
 }
 
 #user-score{
@@ -15,14 +18,36 @@
     align-items: flex-end;
 }
 
+#opponent-score{
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
 .score-box{
-    width: 2rem;
-    height: 1rem;
+    width: 1.5rem;
+    height: 0.5rem;
     background-color: var(--snakeGray);
 }
 
 .final-score-box{
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
     background-color: var(--snakeGray);
+}
+
+.score-number{
+    text-align: center;
+    font-family: new-hero, sans-serif;
+    font-weight: 300;
+    font-size: 2.5rem;
+    width: 2rem;
+    transform: translateY(0.5rem);
+}
+
+#score-status{
+    font-family: axia, sans-serif;
+    font-weight: 900;
+    font-size: 3rem;
+    transform: translateY(0.7rem);
 }

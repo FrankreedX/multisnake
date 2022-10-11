@@ -10,19 +10,19 @@ import twitterIcon from '../assets/icons/twitter-icon.svg';
 import githubIcon from '../assets/icons/github-icon.svg';
 import emailIcon from '../assets/icons/email-icon.svg'
 
-const Header = (props) => {
+const Header = () => {
 
     const location = useLocation();
     const [headerStyle, setHeaderStyle] = useState({
         height: "7rem",
         padding: "2rem 3rem 1rem 3rem"
-    })
+    });
 
-    useEffect(()=>{
+    useEffect(() => {
         if(location.pathname === "/game"){
             setHeaderStyle({
-                height: "4.5rem",
-                padding: "1rem 3rem 1rem 3rem"
+                height: "4rem",
+                padding: "1rem 3rem 0.5rem 3rem"
             })
         }else{
             setHeaderStyle({
@@ -30,13 +30,8 @@ const Header = (props) => {
                 padding: "2rem 3rem 1rem 3rem"
             })
         }
-        if(document.getElementById("header") !== null && document.getElementById("footer") !== null){
-            props.onChange()
-            console.log("resize inside header")
-        }
-    }, [location, props])
-
-
+        
+    }, [location])
 
     return (
         <div id="header" style={{height: headerStyle.height, padding: headerStyle.padding}}>

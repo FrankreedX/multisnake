@@ -7,8 +7,8 @@ import './Score.css';
 const Score = () => {
     const [score, setScore] = useState({
         goal: 7,
-        user: 1,
-        opponent: 3
+        user: 0,
+        opponent: 0
     });
 
     const ScoreBox = ({scoreBoxClass, color}) =>{
@@ -24,7 +24,7 @@ const Score = () => {
         const scoreBoxes = [];
 
         for(let i = 0; i < goal; i++){
-            let scoreBoxClass = "score-Box";
+            let scoreBoxClass = "score-box";
             let color = null
 
             if(i + 1 <= score){
@@ -58,7 +58,7 @@ const Score = () => {
             <div id="score-status">
                 VS
             </div>
-            <PlayerScore divID={"opponent-score"} score={score.user} goal={score.goal}/>
+            <PlayerScore divID={"opponent-score"} score={score.opponent} goal={score.goal}/>
         </div>
     );
 }

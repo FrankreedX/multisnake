@@ -1,0 +1,28 @@
+#score{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+#score-status{
+    height: 6rem;
+}
+
+#user-score{
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.score-box{
+    width: 2rem;
+    height: 1rem;
+    background-color: var(--snakeGray);
+}
+
+.final-score-box{
+    width: 2rem;
+    height: 2rem;
+    background-color: var(--snakeGray);
+}

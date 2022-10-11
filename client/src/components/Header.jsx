@@ -30,7 +30,11 @@ const Header = (props) => {
                 padding: "2rem 3rem 1rem 3rem"
             })
         }
-    }, [location])
+        if(document.getElementById("header") !== null && document.getElementById("footer") !== null){
+            props.onChange()
+            console.log("resize inside header")
+        }
+    }, [location, props])
 
 
 

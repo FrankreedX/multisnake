@@ -1,6 +1,6 @@
 //dependencies
 import React, { useEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 
 //styles
 import './App.css';
@@ -25,6 +25,9 @@ function App() {
   // }, []);
 
   // window dimensions
+
+  const location = useLocation();
+
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -35,13 +38,14 @@ function App() {
 
   // resize components based on window dimensions
   useEffect(() => {
+    console.log("handling resizing")
     window.addEventListener('load', handleResize);
     window.addEventListener('resize', handleResize);
     return _ => {
-      window.removeEventListener('load', handleResize)
+      window.removeEventListener('load', handleResize) //🤪
       window.removeEventListener('resize', handleResize)
     }
-  }, []);
+  }, [dimensions]);
 
   return (
     <div className="app" style={{height: dimensions.height}}>
@@ -60,9 +64,11 @@ function App() {
   );
 
   function handleResize() {
+    console.log("handling resizing inside")
     let newHeaderHeight = document.getElementById("header").offsetHeight;
     let newFooterHeight = document.getElementById("footer").offsetHeight;
 
+    console.log(setDimensions)
     setDimensions({
       width: window.innerWidth,
       height: window.innerHeight,

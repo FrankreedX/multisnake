@@ -3,6 +3,17 @@
     --grid-rows: 1;
 }
 
+#identityBar{
+    display: flex;
+    justify-content: space-between;
+}
+
+#email{
+    min-width: 100px;
+    min-height: 1rem;
+    background: #b31748;
+}
+
 #advBoard {
     display: inline-flex;
     width: 100%;

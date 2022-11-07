@@ -8,15 +8,15 @@ const fs = require('fs')
 
 const {Server} = require('socket.io')
 
-const server = https.createServer({
-    key: fs.readFileSync('key.pem'),
-    cert: fs.readFileSync('cert.pem')
-}, app);
+// const server = https.createServer({
+//     key: fs.readFileSync('key.pem'),
+//     cert: fs.readFileSync('cert.pem')
+// }, app);
 
-// const server = http.createServer(app)
-
+const server = http.createServer(app)
+//
 // const io = new Server(server)
-
+//
 // const game = require('./game.js')
 // const url = require("url");
 // let broadcaster
@@ -67,7 +67,7 @@ const server = https.createServer({
 //     //     console.log(error)
 //     // }
 // })
-
+// app.get('/', (req, res) => { res.send('this is an secure server') });
 app.use(express.static('./public'))
 
 // function resetGame(gameState) {

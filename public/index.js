@@ -9,6 +9,8 @@ let player1Score
 let player2Score
 let deuceText
 
+let userProfile
+
 function coordToStraight(row, col) {
     return row * boardCol + col
 }
@@ -36,6 +38,7 @@ window.onload = async () => {
         cell.className = "grid-item"
         playfield.appendChild(cell);
     }
+    setIDBoard()
 }
 
 let backgroundColor = "black"
@@ -86,6 +89,7 @@ socket.on('initial countdown', async (num) => {
 socket.on('game ended', (winner) => {
     console.log(winner)
     gameEnd.textContent = 'Winner: ' + winner[0].winner + '.' + winner[0].reason
+    setIDBoard()
 })
 
 socket.on('game score', (game) => {
@@ -261,4 +265,16 @@ function renderBoard() {
 function setColor(c0, c1, color) {
     if (gridItems[coordToStraight(c0, c1)] !== undefined)
         gridItems[coordToStraight(c0, c1)].style.setProperty("background-color", color)
+}
+
+function setIDBoard(){
+    $.get('/profile', (data, status) => {
+        console.log(status, "data: ", data)
+        userProfile = data
+        document.getElementById("username").textContent = userProfile.name
+        document.getElementById("pfp").setAttribute('src', userProfile.picture)
+        document.getElementById("wins").textContent = 'Wins:' + userProfile.wins
+        document.getElementById("loss").textContent = 'Losses: ' + userProfile.loss
+        document.getElementById("elo").textContent = 'Elo: ' + userProfile.elo
+    })
 }

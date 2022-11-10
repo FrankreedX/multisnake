@@ -1,5 +1,5 @@
 # Project exclude paths
 /node_modules/
-/client_secret_641609187849-vi9j7dbnrl1tck1j66hsm7ablcdqko60.apps.googleusercontent.com-2.json
 /cert.pem
 /key.pem
+/client_secret_641609187849-vi9j7dbnrl1tck1j66hsm7ablcdqko60.apps.googleusercontent.com.json

@@ -4,17 +4,20 @@
     <meta charset="UTF-8">
     <title>Menu</title>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="game.js"></script>
-    <script src="index.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/game.js"></script>
+    <script src="/index.js"></script>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <h1>Competitive snake!</h1>
 <div id="identityBar">
-    <a id="loginLink" href="/oauth2">Sign in with Google</a>
-    <div>
-        <p id="email"></p>
-    </div>
+    <img src="#" id="pfp">
+    <p id="username">sth</p>
+    <a href="/oauth2">Login</a>
+    <p id="wins">Wins: 0</p>
+    <p id="loss">Loss: 0</p>
+    <p id="elo">Elo: 1500</p>
 </div>
 <button type="button" id="createRoom" onclick="createRoom()">Create Room</button>
 <p id="roomid"></p>

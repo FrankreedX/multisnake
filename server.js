@@ -19,11 +19,11 @@ const server = https.createServer({
 const io = new Server(server)
 
 const game = require('./game.js')
+const db = require('./database.js')
 const url = require("url");
 let broadcaster
 let gameStates = new Map()
 let logged_in_players = new Map()
-let all_players = new Map()
 
 let oauth_creds = JSON.parse(fs.readFileSync('./client_secret_641609187849-vi9j7dbnrl1tck1j66hsm7ablcdqko60.apps.googleusercontent.com.json')).web
 
@@ -59,25 +59,26 @@ app.get('/authorizedoauth2', async (req, res) => {
         'redirect_uri=https%3A%2F%2Flvh.me%3A3000%2Fauthorizedoauth2', {method: 'post'})).json()
     const id_token = parseJwt(response.id_token)
     console.log(id_token)
-    if (!all_players.has(id_token.sub)){
-        all_players[id_token.sub] = {
-            'access_token': response.access_token,
-            'refresh_token': response.refresh_token,
+    if (db.get_player(id_token.sub) === undefined){
+        db.add_player({
+            id: id_token.sub,
+            access_token: response.access_token,
+            refresh_token: response.refresh_token,
             name: id_token.name,
             picture: id_token.picture,
             locale: id_token.locale,
             wins: 0,
             loss: 0,
             elo: 1500,
-            friends: []
-        }
+        })
     }
+
     res.cookie('id', id_token.sub)
     res.redirect('/')
 })
 
 app.get('/profile', (req, res) => {
-    if (Object.keys(req.cookies).indexOf('id') === -1 || all_players[req.cookies.id] === undefined){
+    if (Object.keys(req.cookies).indexOf('id') === -1 || db.get_player(req.cookies.id) === undefined){
         res.send({
             'access_token': null,
             'refresh_token': null,
@@ -90,7 +91,7 @@ app.get('/profile', (req, res) => {
             friends: []
         })
     } else {
-        res.send(all_players[req.cookies.id])
+        res.send(get_player(req.cookies.id))
     }
 })
 
@@ -323,3 +324,8 @@ server.listen(port, () => {
 })
 
 exports.server = server
+
+process.on('SIGINT', () => {
+    db.close();
+    server.close();
+});

@@ -4,6 +4,7 @@ const fetch = require('node-fetch')
 const app = express()
 const https = require('https')
 const fs = require('fs')
+const  crypto = require('crypto')
 const cookies = require("cookie-parser");
 app.use(cookies())
 
@@ -23,7 +24,7 @@ const db = require('./database.js')
 const url = require("url");
 let broadcaster
 let gameStates = new Map()
-let logged_in_players = new Map()
+let session_list = new Map()
 
 let oauth_creds = JSON.parse(fs.readFileSync('./client_secret_641609187849-vi9j7dbnrl1tck1j66hsm7ablcdqko60.apps.googleusercontent.com.json')).web
 
@@ -48,7 +49,6 @@ app.get('/oauth2', async (req, res) => {
 })
 
 app.get('/authorizedoauth2', async (req, res) => {
-    // console.log(req.url)
     const qs = new url.URL(req.url, 'https://lvh.me:3000')
         .searchParams.get('code');
     const response = await (await fetch('https://oauth2.googleapis.com/token?' +
@@ -73,12 +73,16 @@ app.get('/authorizedoauth2', async (req, res) => {
         })
     }
 
-    res.cookie('id', id_token.sub)
+    let session_id = generate_session_id(db.get_player(id_token.sub))
+
+    console.log()
+
+    res.cookie('sessionID', session_id, {httpOnly: true, secure: true, expires: session_list[session_id].timeout})
     res.redirect('/')
 })
 
 app.get('/profile', (req, res) => {
-    if (Object.keys(req.cookies).indexOf('id') === -1 || db.get_player(req.cookies.id) === undefined){
+    if (Object.keys(req.cookies).indexOf('sessionID') === -1 || session_list[req.cookies.sessionID] === undefined || session_list[req.cookies.sessionID] === null){
         res.send({
             'access_token': null,
             'refresh_token': null,
@@ -88,10 +92,9 @@ app.get('/profile', (req, res) => {
             wins: 0,
             loss: 0,
             elo: 1500,
-            friends: []
         })
     } else {
-        res.send(get_player(req.cookies.id))
+        res.send(session_list[req.cookies.sessionID])
     }
 })
 
@@ -159,6 +162,22 @@ async function startGame(gameState) {
     console.log("playing state: ", gameState)
     broadcaster.emit('snake update', gameState)
     broadcaster.emit('get input', gameState)
+}
+
+function generate_session_id(player_id){
+    let sessionID = crypto.randomUUID()
+    let obj = player_id
+    obj['socket_id'] = ''
+    obj['socket_room'] = ''
+    obj['timeout'] = Date.now() + 2628000 //will expire 1 month from now
+    session_list[sessionID] = obj;
+    return sessionID
+}
+
+function filter_session_timeout(){
+    session_list = session_list.filter((sessions) => {
+        return sessions.timeout > Date.now()
+    })
 }
 
 io.on('connection', (socket) => {

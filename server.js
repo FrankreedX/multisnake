@@ -6,6 +6,7 @@ const https = require('https')
 const fs = require('fs')
 const  crypto = require('crypto')
 const cookies = require("cookie-parser");
+const {parse} = require('cookie')
 app.use(cookies())
 
 const {Server} = require('socket.io')
@@ -64,6 +65,7 @@ app.get('/authorizedoauth2', async (req, res) => {
             id: id_token.sub,
             access_token: response.access_token,
             refresh_token: response.refresh_token,
+            socket_session: '',
             name: id_token.name,
             picture: id_token.picture,
             locale: id_token.locale,
@@ -73,11 +75,12 @@ app.get('/authorizedoauth2', async (req, res) => {
         })
     }
 
-    let session_id = generate_session_id(db.get_player(id_token.sub))
+    let session_id = generate_session_id({id: id_token.sub})
 
-    console.log()
+    let d = new Date(0)
+    d.setUTCMilliseconds(session_list[session_id].timeout)
 
-    res.cookie('sessionID', session_id, {httpOnly: true, secure: true, expires: session_list[session_id].timeout})
+    res.cookie('sessionID', session_id, {httpOnly: true, secure: true, expires: d})
     res.redirect('/')
 })
 
@@ -94,7 +97,12 @@ app.get('/profile', (req, res) => {
             elo: 1500,
         })
     } else {
-        res.send(session_list[req.cookies.sessionID])
+        console.log(session_list)
+        let db_item = db.get_player(session_list[req.cookies.sessionID].id)
+        delete db_item['access_token']
+        delete db_item['refresh_token']
+        console.log('db_item: ', db_item)
+        res.send(db_item)
     }
 })
 
@@ -140,13 +148,33 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function sendScore(gameState){
+    console.log("playerIDs: ", gameState.playerIDs)
+    let db1 = db.get_player(session_list[gameState.playerIDs[0]].id)
+    let db2 = db.get_player(session_list[gameState.playerIDs[1]].id)
+    if(db1 === undefined){
+        db1 = {
+            name: "guest",
+            picture: "Assets/person-placeholder.jpg"
+        }
+    }
+    if(db2 === undefined){
+        db2 = {
+            name: "guest",
+            picture: "Assets/person-placeholder.jpg"
+        }
+    }
+    console.log("sending score: ", db1, db2)
+    broadcaster.emit('game score', gameState, {name: db1.name, picture: db1.picture}, {name: db2.name, picture: db2.picture})
+}
+
 function parseJwt (token) {
     return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 }
 
 async function startGame(gameState) {
     broadcaster.emit('snake update', gameState)
-    broadcaster.emit('game score', gameState)
+    sendScore(gameState)
     game.spawnFood(gameState)
     game.shiftFood(gameState)
     for (let i = 3; i >= 0; i--) {
@@ -169,7 +197,7 @@ function generate_session_id(player_id){
     let obj = player_id
     obj['socket_id'] = ''
     obj['socket_room'] = ''
-    obj['timeout'] = Date.now() + 2628000 //will expire 1 month from now
+    obj['timeout'] = Date.now() + 2629746000 //will expire 1 month from now
     session_list[sessionID] = obj;
     return sessionID
 }
@@ -181,7 +209,15 @@ function filter_session_timeout(){
 }
 
 io.on('connection', (socket) => {
+    const cookie = parse(socket.request.headers.cookie || "sessionID=0000")
     console.log('user id ', socket.id, ' connected')
+    console.log('with cookie: ', cookie)
+    console.log(session_list)
+    if(session_list[cookie.sessionID]) {
+        session_list[cookie.sessionID].socket_session = socket.id
+        console.log("adding user id")
+    }
+
 
     socket.on('echoTest', (message) => {
         console.log('server echo', message)
@@ -193,10 +229,16 @@ io.on('connection', (socket) => {
     })
 
     socket.on('createRoom', (values) => {
+        let cur_sesion = '0000'
+        console.log("cookie when creating room: ", cookie.sessionID)
+        if(cookie.sessionID !== null && cookie.sessionID !== undefined){
+            cur_sesion = cookie.sessionID
+        }
         let gameState = {
             'boardCol': values.boardCol,
             'boardRow': values.boardRow,
-            'playerIDs': [socket.id],
+            'playerSocketIDs': [socket.id],
+            'playerIDs': [cur_sesion],
             'roomid': socket.id,
             'roomPlayerNum': 2,
             'frame': 0,
@@ -211,6 +253,9 @@ io.on('connection', (socket) => {
             'matchFinished': false
         }
         resetGame(gameState)
+        if(cookie.sessionID !== null && cookie.sessionID !== undefined){
+            session_list[cookie.sessionID].socket_room = socket.id
+        }
         console.log("created room id: ", gameState.roomid)
         socket.data.roomid = socket.id
         broadcaster = io.to(gameState.roomid)
@@ -225,14 +270,20 @@ io.on('connection', (socket) => {
             socket.emit('room not found')
             return
         }
-        if (gameState.playerIDs.length === gameState.roomPlayerNum) {
+        if (gameState.playerSocketIDs.length === gameState.roomPlayerNum) {
             socket.emit('room occupied')
             return
         }
         socket.join(gameState.roomid)
         socket.data.roomid = gameState.roomid
-        gameState.playerIDs.push(socket.id)
-        broadcaster.emit(`player ${gameState.playerIDs.length} joined the room`)
+        if(cookie.sessionID !== null && cookie.sessionID !== undefined){
+            session_list[cookie.sessionID].socket_room = roomid
+            gameState.playerIDs.push(cookie.sessionID)
+        } else {
+            gameState.playerIDs.push('0000')
+        }
+        gameState.playerSocketIDs.push(socket.id)
+        broadcaster.emit(`player ${gameState.playerSocketIDs.length} joined the room`)
         startGame(gameState)
     })
 
@@ -244,7 +295,7 @@ io.on('connection', (socket) => {
             return
         }
         if (gameState.gameFinished) {
-            broadcaster.emit('game score', gameState)
+            sendScore(gameState)
             if (gameState.snakes[0].game_score === 6 && gameState.snakes[1].game_score === 6)
                 gameState.deuce = true
             if (gameState.deuce) {
@@ -274,7 +325,7 @@ io.on('connection', (socket) => {
             return
         }
         console.log("received data ", direction.dir, "from id ", socket.id, " on frame ", direction.frame)
-        let snakeIndex = gameState.playerIDs.indexOf(socket.id)
+        let snakeIndex = gameState.playerSocketIDs.indexOf(socket.id)
         if (snakeIndex === -1) {
             socket.emit('not in room')
             return
@@ -329,6 +380,10 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         let gameState = gameStates.get(socket.data.roomid)
         if (gameState !== undefined) {
+            if(cookie.sessionID !== null && cookie.sessionID !== undefined){
+                session_list[cookie.sessionID].socket_room = ''
+                session_list[cookie.sessionID].socket_id = ''
+            }
             console.log('user disconnected from room ', socket.data.roomid)
             broadcaster.emit('player left room')
             gameState.gameFinished = true

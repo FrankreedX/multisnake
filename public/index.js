@@ -8,6 +8,10 @@ let debug
 let player1Score
 let player2Score
 let deuceText
+let player1Img
+let player2Img
+let player1Name
+let player2Name
 
 let userProfile
 
@@ -17,9 +21,9 @@ function coordToStraight(row, col) {
 
 //load dom elements into variables
 window.onload = async () => {
-    playfield = document.getElementById("playfield");
-    gridItems = playfield.getElementsByClassName("grid-item");
-    countdown = document.getElementById("countdown");
+    playfield = document.getElementById("playfield")
+    gridItems = playfield.getElementsByClassName("grid-item")
+    countdown = document.getElementById("countdown")
     foodCount = document.getElementById("foodcount")
     frames = document.getElementById("frames")
     debug = document.getElementById("debug").value
@@ -27,6 +31,10 @@ window.onload = async () => {
     player1Score = document.getElementById("player1Score")
     player2Score = document.getElementById("player2Score")
     deuceText = document.getElementById("deuceText")
+    player1Img = document.getElementById("player1Img")
+    player2Img = document.getElementById("player2Img")
+    player1Name = document.getElementById("player1Name")
+    player2Name = document.getElementById("player2Name")
 
     //tell CSS the dimension of the gameboard so it can line them up
     playfield.style.setProperty('--grid-rows', boardRow.toString());
@@ -92,10 +100,15 @@ socket.on('game ended', (winner) => {
     setIDBoard()
 })
 
-socket.on('game score', (game) => {
+socket.on('game score', (game, player1, player2) => {
     gameState = game
     player1Score.textContent = gameState.snakes[0].game_score
     player2Score.textContent = gameState.snakes[1].game_score
+    console.log("setting players: ", player1, player2)
+    player1Img.src = player1.picture
+    player1Name.textContent = player1.name
+    player2Img.src = player2.picture
+    player2Name.textContent = player2.name
     if (gameState.deuce)
         deuceText.textContent = "Deuce!"
     else
@@ -111,35 +124,19 @@ socket.on('match ended', (winner) => {
     }
 })
 
-function renderBoard() {
-    //Fill all cells with backgroundColor
-    for (let c = 0; c < boardCol * boardRow; c++) {
-        gridItems[c].style.setProperty("background-color", backgroundColor)
-        gridItems[c].style.removeProperty("background-image")
-        gridItems[c].style.removeProperty("transform")
-    }
-    //colors grey guide lines
-    for (let i = 0; i < gameState.snakes.length; i++) {
-        let snake = gameState.snakes[i].body_coords
-        for (let c = 0; c < boardRow; c++) {
-            setColor(c, snake[0][1], guideColor)
-        }
-        for (let c = 0; c < boardCol; c++) {
-            setColor(snake[0][0], c, guideColor)
-        }
-    }
-    //array of sprites
-    /*
-    direction designations
-        0
-        ^
-        |
-    3 <- -> 1
-        |
-        V
-        2
-     */
-    let body_parts = [{
+//array of sprites
+/*
+direction designations
+    0
+    ^
+    |
+3 <- -> 1
+    |
+    V
+    2
+ */
+let body_parts = [
+    {
         '01': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.25turn)"},
         '02': {"background-image": "url(Assets/body_red.png)"},
         '03': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0turn)"},
@@ -147,26 +144,53 @@ function renderBoard() {
         '13': {"background-image": "url(Assets/body_red.png)", "transform": "rotate(0.25turn)"},
         '23': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.75turn)"}
     },
-        {
-            '01': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.25turn)"},
-            '02': {"background-image": "url(Assets/body_blue.png)"},
-            '03': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0turn)"},
-            '12': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.5turn)"},
-            '13': {"background-image": "url(Assets/body_blue.png)", "transform": "rotate(0.25turn)"},
-            '23': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.75turn)"}
-        }
-    ]
+    {
+        '01': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.25turn)"},
+        '02': {"background-image": "url(Assets/body_blue.png)"},
+        '03': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0turn)"},
+        '12': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.5turn)"},
+        '13': {"background-image": "url(Assets/body_blue.png)", "transform": "rotate(0.25turn)"},
+        '23': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.75turn)"}
+    }
+]
+
+function renderBoard() {
+    //Fill all cells with backgroundColor
+    for (let c = 0; c < boardCol * boardRow; c++) {
+        let item = gridItems[c].style
+        item.setProperty("background-color", backgroundColor)
+        item.removeProperty("background-image")
+        item.removeProperty("transform")
+    }
+    //colors grey guide lines
+    // for (let i = 0; i < gameState.snakes.length; i++) {
+    //     let snake = gameState.snakes[i].body_coords[0]
+    //     for (let c = 0; c < boardRow; c++) {
+    //         setColor(c, snake[1], guideColor)
+    //     }
+    //     for (let c = 0; c < boardCol; c++) {
+    //         setColor(snake[0], c, guideColor)
+    //     }
+    // }
     //loop through each snakes
     for (let i = 0; i < gameState.snakes.length; i++) {
-        let direction = ''
+        let direction
         let snake = gameState.snakes[i].body_coords //array of snake body segments
+
+        //colors grey guide lines
+        for (let c = 0; c < boardRow; c++) {
+            setColor(c, snake[0][1], guideColor)
+        }
+        for (let c = 0; c < boardCol; c++) {
+            setColor(snake[0][0], c, guideColor)
+        }
         //loop through each segment
-        for (let c = 1; c < gameState.snakes[i].body_coords.length - 1; c++) {
+        for (let c = 1; c < snake.length - 1; c++) {
             direction = ''
             //handles wraparound
             /***
              * consider the 2 pieces adjacent to the segment being processed (index c).
-             * If the difference between the coordinates between any of the pairs being checked, one of them must be looped,
+             * If the difference between the coordinates between any of the pairs being checked is larger than 2, one of them must be looped,
              * so add boardRow to any segment that are significantly smaller.
              */
             for (let a = -1; a < 2; a++) {
@@ -249,7 +273,7 @@ function renderBoard() {
         //HUNTER MODE
         if (gameState.snakes[i].advantage_point === 5) {
             setColor(snake[0][0], snake[0][1], "yellow")
-            for(let j = gameState.snakes[1 - i].body_coords.length - 1; j > gameState.snakes[1 - i].body_coords.length - 5; j--){
+            for (let j = gameState.snakes[1 - i].body_coords.length - 1; j > gameState.snakes[1 - i].body_coords.length - 5; j--) {
                 setColor(gameState.snakes[1 - i].body_coords[j][0], gameState.snakes[1 - i].body_coords[j][1], "yellow")
             }
         }
@@ -263,16 +287,17 @@ function renderBoard() {
 }
 
 function setColor(c0, c1, color) {
-    if (gridItems[coordToStraight(c0, c1)] !== undefined)
-        gridItems[coordToStraight(c0, c1)].style.setProperty("background-color", color)
+    let gridItem = gridItems[coordToStraight(c0, c1)]
+    if (gridItem !== undefined)
+        gridItem.style.setProperty("background-color", color)
 }
 
-function setIDBoard(){
+function setIDBoard() {
     $.get('/profile', (data, status) => {
         console.log(status, "data: ", data)
         userProfile = data
         document.getElementById("username").textContent = userProfile.name
-        document.getElementById("pfp").setAttribute('src', userProfile.picture)
+        document.getElementById("loggedInUser").setAttribute('src', userProfile.picture)
         document.getElementById("wins").textContent = 'Wins:' + userProfile.wins
         document.getElementById("loss").textContent = 'Losses: ' + userProfile.loss
         document.getElementById("elo").textContent = 'Elo: ' + userProfile.elo

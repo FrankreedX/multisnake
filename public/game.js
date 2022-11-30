@@ -47,7 +47,7 @@ socket.on('get input', (game) => {
         bufferedDirectionQueue = frameDirectionQueue
     }
     frameDirectionQueue = []
-    let snakeDirection = gameState.snakes[gameState.playerIDs.indexOf(socket.id)].direction
+    let snakeDirection = gameState.snakes[gameState.playerSocketIDs.indexOf(socket.id)].direction
     let nextDir = bufferedDirectionQueue.shift()
     console.log("next Dir: ", nextDir)
     if ((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2) {

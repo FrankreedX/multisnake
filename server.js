@@ -302,17 +302,21 @@ io.on('connection', (socket) => {
                 if (gameState.snakes[0].game_score - gameState.snakes[1].game_score > 1) {
                     broadcaster.emit('match ended', {'winner': 1})
                     gameState.matchFinished = true
+                    db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 0)
                 } else if (gameState.snakes[1].game_score - gameState.snakes[0].game_score > 1) {
                     broadcaster.emit('match ended', {'winner': 2})
                     gameState.matchFinished = true
+                    db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 1)
                 }
             } else {
                 if (gameState.snakes[0].game_score > 6) {
                     broadcaster.emit('match ended', {'winner': 1})
                     gameState.matchFinished = true
+                    db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 0)
                 } else if (gameState.snakes[1].game_score > 6) {
                     broadcaster.emit('match ended', {'winner': 2})
                     gameState.matchFinished = true
+                    db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 1)
                 }
             }
             if (!gameState.matchFinished && gameState.nextFood.length > 0) {

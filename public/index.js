@@ -124,6 +124,11 @@ socket.on('match ended', (winner) => {
     }
 })
 
+socket.on("refresh", () => {
+    console.log("refreshing")
+    window.location.reload()
+})
+
 //array of sprites
 /*
 direction designations

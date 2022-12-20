@@ -2,22 +2,24 @@ const express = require('express')
 const {google} = require('googleapis')
 const fetch = require('node-fetch')
 const app = express()
+const http = require('http')
 const https = require('https')
 const fs = require('fs')
-const  crypto = require('crypto')
+const crypto = require('crypto')
 const cookies = require("cookie-parser");
-const {parse} = require('cookie')
+const {parse, serialize} = require('cookie')
 app.use(cookies())
 
 const {Server} = require('socket.io')
 
 const server = https.createServer({
-    key: fs.readFileSync('key.pem'),
-    cert: fs.readFileSync('cert.pem')
+    key: fs.readFileSync('Certificates/server.key'),
+    cert: fs.readFileSync('Certificates/server.crt'),
+    ca: fs.readFileSync('Certificates/CAserver.crt')
 }, app);
 
 // const server = http.createServer(app)
-//
+
 const io = new Server(server)
 
 const game = require('./game.js')
@@ -38,7 +40,7 @@ const oauth2Client = new google.auth.OAuth2(
 const google_oauth_login_url = oauth2Client.generateAuthUrl({
     // 'online' (default) or 'offline' (gets refresh_token)
     access_type: 'offline',
-    prompt:'consent',
+    prompt: 'consent',
     response_type: 'code',
 
     // If you only need one scope you can pass it as a string
@@ -59,8 +61,7 @@ app.get('/authorizedoauth2', async (req, res) => {
         'client_secret=' + oauth_creds.client_secret + '&' +
         'redirect_uri=https%3A%2F%2Flvh.me%3A3000%2Fauthorizedoauth2', {method: 'post'})).json()
     const id_token = parseJwt(response.id_token)
-    console.log(id_token)
-    if (db.get_player(id_token.sub) === undefined){
+    if (db.get_player(id_token.sub) === undefined) {
         db.add_player({
             id: id_token.sub,
             access_token: response.access_token,
@@ -75,17 +76,29 @@ app.get('/authorizedoauth2', async (req, res) => {
         })
     }
 
-    let session_id = generate_session_id({id: id_token.sub})
+    console.log("id: ", id_token.sub)
 
-    let d = new Date(0)
-    d.setUTCMilliseconds(session_list[session_id].timeout)
+    if (!req.cookies.sessionID) {
+        let session_id = generate_session_id({id: '0000'}, '0000')
 
-    res.cookie('sessionID', session_id, {httpOnly: true, secure: true, expires: d})
+        let d = new Date(0)
+        d.setUTCMilliseconds(session_list[session_id].timeout)
+
+        res.cookie('sessionID', session_id, {httpOnly: true, secure: true, expires: d})
+    } else {
+        session_list[req.cookies.sessionID].id = id_token.sub
+
+        let d = new Date(0)
+        d.setUTCMilliseconds(session_list[req.cookies.sessionID].timeout)
+
+        res.cookie('sessionID', req.cookies.sessionID, {httpOnly: true, secure: true, expires: d})
+    }
+
     res.redirect('/')
 })
 
 app.get('/profile', (req, res) => {
-    if (Object.keys(req.cookies).indexOf('sessionID') === -1 || session_list[req.cookies.sessionID] === undefined || session_list[req.cookies.sessionID] === null){
+    if (Object.keys(req.cookies).indexOf('sessionID') === -1 || session_list[req.cookies.sessionID] === undefined || session_list[req.cookies.sessionID] === null) {
         res.send({
             'access_token': null,
             'refresh_token': null,
@@ -96,14 +109,27 @@ app.get('/profile', (req, res) => {
             loss: 0,
             elo: 1500,
         })
+    } else if (session_list[req.cookies.sessionID].id === '0000') {
+        res.send(session_list[req.cookies.sessionID])
     } else {
-        console.log(session_list)
+        console.log("Session_list from /profile: ", session_list)
         let db_item = db.get_player(session_list[req.cookies.sessionID].id)
         delete db_item['access_token']
         delete db_item['refresh_token']
-        console.log('db_item: ', db_item)
         res.send(db_item)
     }
+})
+
+app.get('/', (req, res, next) => {
+    if (!req.cookies.sessionID || !session_list[req.cookies.sessionID]) {
+        let session_id = generate_session_id({id: '0000'}, '0000')
+
+        let d = new Date(0)
+        d.setUTCMilliseconds(session_list[session_id].timeout)
+
+        res.cookie('sessionID', session_id, {httpOnly: true, secure: true})
+    }
+    next()
 })
 
 app.use(express.static('./public'))
@@ -148,27 +174,30 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function sendScore(gameState){
+function sendScore(gameState) {
     console.log("playerIDs: ", gameState.playerIDs)
     let db1 = db.get_player(session_list[gameState.playerIDs[0]].id)
     let db2 = db.get_player(session_list[gameState.playerIDs[1]].id)
-    if(db1 === undefined){
+    if (db1 === undefined) {
         db1 = {
             name: "guest",
             picture: "Assets/person-placeholder.jpg"
         }
     }
-    if(db2 === undefined){
+    if (db2 === undefined) {
         db2 = {
             name: "guest",
             picture: "Assets/person-placeholder.jpg"
         }
     }
     console.log("sending score: ", db1, db2)
-    broadcaster.emit('game score', gameState, {name: db1.name, picture: db1.picture}, {name: db2.name, picture: db2.picture})
+    broadcaster.emit('game score', gameState, {name: db1.name, picture: db1.picture}, {
+        name: db2.name,
+        picture: db2.picture
+    })
 }
 
-function parseJwt (token) {
+function parseJwt(token) {
     return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 }
 
@@ -192,8 +221,9 @@ async function startGame(gameState) {
     broadcaster.emit('get input', gameState)
 }
 
-function generate_session_id(player_id){
-    let sessionID = crypto.randomUUID()
+function generate_session_id(player_id, sessionID) {
+    if (sessionID === '0000')
+        sessionID = crypto.randomUUID()
     let obj = player_id
     obj['socket_id'] = ''
     obj['socket_room'] = ''
@@ -202,22 +232,28 @@ function generate_session_id(player_id){
     return sessionID
 }
 
-function filter_session_timeout(){
+function filter_session_timeout() {
     session_list = session_list.filter((sessions) => {
         return sessions.timeout > Date.now()
     })
 }
 
 io.on('connection', (socket) => {
-    const cookie = parse(socket.request.headers.cookie || "sessionID=0000")
+    // if(!socket.handshake.headers.cookie && !socket.request.headers.cookie){
+    //     socket.emit("reconnect")
+    //     return
+    // }
+    const cookie = parse(socket.request.headers.cookie)
     console.log('user id ', socket.id, ' connected')
     console.log('with cookie: ', cookie)
     console.log(session_list)
-    if(session_list[cookie.sessionID]) {
+    if (session_list[cookie.sessionID]) {
         session_list[cookie.sessionID].socket_session = socket.id
         console.log("adding user id")
+    } else {
+        console.log("telling client to refresh")
+        socket.emit('refresh')
     }
-
 
     socket.on('echoTest', (message) => {
         console.log('server echo', message)
@@ -231,7 +267,7 @@ io.on('connection', (socket) => {
     socket.on('createRoom', (values) => {
         let cur_sesion = '0000'
         console.log("cookie when creating room: ", cookie.sessionID)
-        if(cookie.sessionID !== null && cookie.sessionID !== undefined){
+        if (cookie.sessionID !== null && cookie.sessionID !== undefined) {
             cur_sesion = cookie.sessionID
         }
         let gameState = {
@@ -253,7 +289,7 @@ io.on('connection', (socket) => {
             'matchFinished': false
         }
         resetGame(gameState)
-        if(cookie.sessionID !== null && cookie.sessionID !== undefined){
+        if (cookie.sessionID !== null && cookie.sessionID !== undefined) {
             session_list[cookie.sessionID].socket_room = socket.id
         }
         console.log("created room id: ", gameState.roomid)
@@ -276,7 +312,7 @@ io.on('connection', (socket) => {
         }
         socket.join(gameState.roomid)
         socket.data.roomid = gameState.roomid
-        if(cookie.sessionID !== null && cookie.sessionID !== undefined){
+        if (cookie.sessionID !== null && cookie.sessionID !== undefined) {
             session_list[cookie.sessionID].socket_room = roomid
             gameState.playerIDs.push(cookie.sessionID)
         } else {
@@ -322,9 +358,8 @@ io.on('connection', (socket) => {
             if (!gameState.matchFinished && gameState.nextFood.length > 0) {
                 resetGame(gameState)
                 sleep(2000).then(() => {
-                        startGame(gameState)
-                    }
-                )
+                    startGame(gameState)
+                })
             }
             return
         }
@@ -381,12 +416,16 @@ io.on('connection', (socket) => {
         resetGame(gameState)
         startGame(gameState)
     })
+
     socket.on('disconnect', () => {
         let gameState = gameStates.get(socket.data.roomid)
         if (gameState !== undefined) {
-            if(cookie.sessionID !== null && cookie.sessionID !== undefined){
+            if (cookie.sessionID !== null && cookie.sessionID !== undefined) {
                 session_list[cookie.sessionID].socket_room = ''
                 session_list[cookie.sessionID].socket_id = ''
+                if (session_list[cookie.sessionID].id === '0000') {
+                    session_list[cookie.sessionID].remove()
+                }
             }
             console.log('user disconnected from room ', socket.data.roomid)
             broadcaster.emit('player left room')

@@ -1,7 +1,11 @@
 # Project exclude paths
 /.idea/
 /node_modules/
-/cert.pem
-/key.pem
 /client_secret_641609187849-vi9j7dbnrl1tck1j66hsm7ablcdqko60.apps.googleusercontent.com.json
 /player_data.db
+/log.txt
+/*.pem
+/*.key
+/*.cer
+/*.p12
+/Certificates/

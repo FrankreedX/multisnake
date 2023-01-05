@@ -79,7 +79,7 @@ app.get('/authorizedoauth2', async (req, res) => {
     console.log("id: ", id_token.sub)
 
     if (!req.cookies.sessionID) {
-        let session_id = generate_session_id({id: '0000'}, '0000')
+        let session_id = generate_session_id({id: id_token.sub}, '0000')
 
         let d = new Date(0)
         d.setUTCMilliseconds(session_list[session_id].timeout)
@@ -120,6 +120,13 @@ app.get('/profile', (req, res) => {
     }
 })
 
+app.get('/backend_game.js', (req, res) => {
+    res.type('.js');
+    fs.readFile('./game.js', (err, data) => {
+        res.send(data)
+    })
+})
+
 app.get('/', (req, res, next) => {
     if (!req.cookies.sessionID || !session_list[req.cookies.sessionID]) {
         let session_id = generate_session_id({id: '0000'}, '0000')
@@ -133,42 +140,6 @@ app.get('/', (req, res, next) => {
 })
 
 app.use(express.static('./public'))
-
-function resetGame(gameState) {
-    gameState.gameFinished = true
-    gameState.food = []
-    gameState.nextFood = []
-    gameState.foodCounter = 0
-    let game_score = []
-    for (let n = 0; n < 2; n++) {
-        game_score.push(0)
-        if (!gameState.matchFinished && gameState.snakes[n] !== undefined)
-            game_score[n] = gameState.snakes[n].game_score
-    }
-    gameState.snakes = []
-    for (let n = 0; n < 2; n++) {
-        let currentSnake = {
-            'body_coords': [],
-            'direction': n * 2 + 1,
-            'skin_head': ['Assets/head_snake_red.png', 'Assets/head_snake_blue.png'],
-            'skin_body_straight': ['Assets/body_red.png', 'Assets/body_blue.png'],
-            'skin_body_angle': ['Assets/90_degree_turn_red.png', 'Assets/90_degree_turn_blue.png'],
-            'skin_tail': ['Assets/tail_red.png', 'Assets/tail_blue.png'],
-            'received_input': true,
-            'advantage_point': 0,
-            'game_score': game_score[n]
-        }
-        gameState.snakes.push(currentSnake)
-    }
-    for (let i = 0; i < 15; i++) {
-        gameState.snakes[0].body_coords.unshift([Math.floor(gameState.boardRow / 2 - 5), i])
-        gameState.snakes[1].body_coords.unshift([Math.floor(gameState.boardRow / 2 + 5), gameState.boardCol - i - 1])
-    }
-    if (gameState.matchFinished) {
-        gameState.deuce = false
-        gameState.matchFinished = false
-    }
-}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -232,10 +203,36 @@ function generate_session_id(player_id, sessionID) {
     return sessionID
 }
 
-function filter_session_timeout() {
-    session_list = session_list.filter((sessions) => {
-        return sessions.timeout > Date.now()
-    })
+function handle_match_ending(){
+    if (gameState.snakes[0].game_score === 6 && gameState.snakes[1].game_score === 6)
+        gameState.deuce = true
+    if (gameState.deuce) {
+        if (gameState.snakes[0].game_score - gameState.snakes[1].game_score > 1) {
+            broadcaster.emit('match ended', {'winner': 1})
+            gameState.matchFinished = true
+            db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 0)
+        } else if (gameState.snakes[1].game_score - gameState.snakes[0].game_score > 1) {
+            broadcaster.emit('match ended', {'winner': 2})
+            gameState.matchFinished = true
+            db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 1)
+        }
+    } else {
+        if (gameState.snakes[0].game_score > 6) {
+            broadcaster.emit('match ended', {'winner': 1})
+            gameState.matchFinished = true
+            db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 0)
+        } else if (gameState.snakes[1].game_score > 6) {
+            broadcaster.emit('match ended', {'winner': 2})
+            gameState.matchFinished = true
+            db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 1)
+        }
+    }
+    if (!gameState.matchFinished && gameState.nextFood.length > 0) {
+        game.resetGame(gameState)
+        sleep(2000).then(() => {
+            startGame(gameState)
+        })
+    }
 }
 
 io.on('connection', (socket) => {
@@ -288,7 +285,7 @@ io.on('connection', (socket) => {
             'deuce': false,
             'matchFinished': false
         }
-        resetGame(gameState)
+        game.resetGame(gameState)
         if (cookie.sessionID !== null && cookie.sessionID !== undefined) {
             session_list[cookie.sessionID].socket_room = socket.id
         }
@@ -332,35 +329,7 @@ io.on('connection', (socket) => {
         }
         if (gameState.gameFinished) {
             sendScore(gameState)
-            if (gameState.snakes[0].game_score === 6 && gameState.snakes[1].game_score === 6)
-                gameState.deuce = true
-            if (gameState.deuce) {
-                if (gameState.snakes[0].game_score - gameState.snakes[1].game_score > 1) {
-                    broadcaster.emit('match ended', {'winner': 1})
-                    gameState.matchFinished = true
-                    db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 0)
-                } else if (gameState.snakes[1].game_score - gameState.snakes[0].game_score > 1) {
-                    broadcaster.emit('match ended', {'winner': 2})
-                    gameState.matchFinished = true
-                    db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 1)
-                }
-            } else {
-                if (gameState.snakes[0].game_score > 6) {
-                    broadcaster.emit('match ended', {'winner': 1})
-                    gameState.matchFinished = true
-                    db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 0)
-                } else if (gameState.snakes[1].game_score > 6) {
-                    broadcaster.emit('match ended', {'winner': 2})
-                    gameState.matchFinished = true
-                    db.end_game(session_list[gameState.playerIDs[0]].id, session_list[gameState.playerIDs[1]].id, 1)
-                }
-            }
-            if (!gameState.matchFinished && gameState.nextFood.length > 0) {
-                resetGame(gameState)
-                sleep(2000).then(() => {
-                    startGame(gameState)
-                })
-            }
+            handle_match_ending()
             return
         }
         console.log("received data ", direction.dir, "from id ", socket.id, " on frame ", direction.frame)
@@ -380,8 +349,10 @@ io.on('connection', (socket) => {
         for (let i = 0; i < gameState.snakes.length; i++) {
             gameState.snakes[i].received_input = false
         }
-
-        game.play(broadcaster, gameState)
+        let gameEndObj = game.play(gameState)
+        if(gameEndObj !== undefined){
+            broadcaster.emit('game ended', gameEndObj)
+        }
         broadcaster.emit('snake update', gameState)
         gameState.frame++
         time = new Date() - time
@@ -413,7 +384,7 @@ io.on('connection', (socket) => {
         }
         console.log("rematch requested from room id ", socket.data.roomid)
 
-        resetGame(gameState)
+        game.resetGame(gameState)
         startGame(gameState)
     })
 
@@ -424,7 +395,7 @@ io.on('connection', (socket) => {
                 session_list[cookie.sessionID].socket_room = ''
                 session_list[cookie.sessionID].socket_id = ''
                 if (session_list[cookie.sessionID].id === '0000') {
-                    session_list[cookie.sessionID].remove()
+                    session_list.delete(cookie.sessionID)
                 }
             }
             console.log('user disconnected from room ', socket.data.roomid)

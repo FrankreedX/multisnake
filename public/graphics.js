@@ -1,12 +1,30 @@
 let socket = io();
 let roomid;
-let gameState = {'gameFinished': false};
-
-let frameDirectionQueue = []
-let bufferedDirectionQueue = []
 
 let boardRow = 25
 let boardCol = 50
+
+let gameState = {
+    'boardCol': boardCol,
+    'boardRow': boardRow,
+    'roomPlayerNum': 2,
+    'frame': 0,
+    'framerate': 15,
+    'food': [],
+    'nextFood': [],
+    'foodCounter': 0,
+    'snakes': [],
+    'gameFinished': false,
+    'deuce': false,
+    'matchFinished': false
+};
+let removeControlListener
+
+let frameDirectionQueue = []
+let frameDirectionQueuePlayer2 = []
+let bufferedDirectionQueue = []
+
+let online = true
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -59,34 +77,49 @@ socket.on('get input', (game) => {
 
 document.addEventListener('keydown', function (event) {
     let nextDir = -1
+    let player1 = true
     switch (event.key) {
         case "ArrowUp":
+            player1 = false
         case "w":
         case "W":
             nextDir = 0
             console.log('Up was pressed');
             break;
+
         case "ArrowRight":
+            player1 = false
         case "d":
         case "D":
             nextDir = 1
-            console.log('Right was pressed');
+            console.log('Right was Pressed');
             break;
+
         case "ArrowDown":
+            player1 = false
         case "s":
         case "S":
             nextDir = 2
             console.log('Down was pressed');
             break;
+
         case "ArrowLeft":
+            player1 = false
         case "a":
         case "A":
             nextDir = 3
             console.log('Left was pressed');
             break;
     }
-    if (nextDir !== frameDirectionQueue[frameDirectionQueue.length - 1] && nextDir !== -1) {
-        frameDirectionQueue.push(nextDir)
-        console.log("frameDirectionQueue: ", frameDirectionQueue)
-    }
-});
+    if (nextDir === -1)
+        return
+    if (online || player1) {
+        if (nextDir !== frameDirectionQueue[frameDirectionQueue.length - 1]) {
+            frameDirectionQueue.push(nextDir)
+            console.log("frameDirectionQueue: ", frameDirectionQueue)
+        }
+    } else if (nextDir !== frameDirectionQueuePlayer2[frameDirectionQueuePlayer2.length - 1]) {
+            frameDirectionQueuePlayer2.push(nextDir)
+            console.log("frameDirectionQueuePlayer2: ", frameDirectionQueuePlayer2)
+        }
+})

@@ -5,8 +5,10 @@
     <title>Menu</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="/game.js"></script>
+    <script src="/graphics.js"></script>
     <script src="/index.js"></script>
+    <script src="/backend_game.js"></script>
+    <script src="local_game.js"></script>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -21,7 +23,7 @@
 </div>
 <button type="button" id="createRoom" onclick="createRoom()">Create Room</button>
 <p id="roomid"></p>
-<br>
+<button type="button" id="startLocal" onclick="startLocal()">Start Local Game</button>
 <br>
 <input type="text" id="echoText" name="echoText">
 <button type="button" id="echoTest" onclick="echoTest(document.getElementById('echoText').value)">Echo Test</button>
@@ -35,8 +37,8 @@
 <br>
 <label for="framerate">New Framerate</label>
 <input type="text" id="framerate" name="framerate">
-<button type="button" id="update-framerate"
-        onclick="updateFramerate(document.getElementById('update-framerate').value)">Update framerate
+<button type="button" id="update-framerate" onclick="updateFramerate(document.getElementById('update-framerate').value)">
+    Update framerate
 </button>
 <br>
 <button type="button" id="rematchBtn" onclick="rematch()">Rematch</button>
@@ -50,6 +52,7 @@
 </div>
 <div id="scoreboard">
     <div>
+        <p>Red Snake</p>
         <img id="player1Img" class="pfp">
         <p id="player1Name"></p>
     </div>
@@ -57,6 +60,7 @@
     <p id="deuceText"></p>
     <p id="player2Score">0</p>
     <div>
+        <p>Blue Snake</p>
         <img id="player2Img" class="pfp">
         <p id="player2Name"></p>
     </div>

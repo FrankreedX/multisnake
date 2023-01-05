@@ -53,7 +53,43 @@ function dirToCoord(gameState, direction, coord) {
     return coordinate
 }
 
-function processGameTurn(broadcaster, gameState) {
+function resetGame(gameState) {
+    gameState.gameFinished = true
+    gameState.food = []
+    gameState.nextFood = []
+    gameState.foodCounter = 0
+    let game_score = []
+    for (let n = 0; n < 2; n++) {
+        game_score.push(0)
+        if (!gameState.matchFinished && gameState.snakes[n] !== undefined)
+            game_score[n] = gameState.snakes[n].game_score
+    }
+    gameState.snakes = []
+    for (let n = 0; n < 2; n++) {
+        let currentSnake = {
+            'body_coords': [],
+            'direction': n * 2 + 1,
+            'skin_head': ['Assets/head_snake_red.png', 'Assets/head_snake_blue.png'],
+            'skin_body_straight': ['Assets/body_red.png', 'Assets/body_blue.png'],
+            'skin_body_angle': ['Assets/90_degree_turn_red.png', 'Assets/90_degree_turn_blue.png'],
+            'skin_tail': ['Assets/tail_red.png', 'Assets/tail_blue.png'],
+            'received_input': true,
+            'advantage_point': 0,
+            'game_score': game_score[n]
+        }
+        gameState.snakes.push(currentSnake)
+    }
+    for (let i = 0; i < 15; i++) {
+        gameState.snakes[0].body_coords.unshift([Math.floor(gameState.boardRow / 2 - 5), i])
+        gameState.snakes[1].body_coords.unshift([Math.floor(gameState.boardRow / 2 + 5), gameState.boardCol - i - 1])
+    }
+    if (gameState.matchFinished) {
+        gameState.deuce = false
+        gameState.matchFinished = false
+    }
+}
+
+function processGameTurn(gameState) {
     console.log("directions for frame ", gameState.frame)
     let nextHead = []
     for (let n = 0; n < gameState.snakes.length; n++) {
@@ -70,9 +106,8 @@ function processGameTurn(broadcaster, gameState) {
             if (coordEqual(nextHead[n], nextHead[m])) {
                 gameEndObj.push({'winner': 0})
                 console.log('tie. player 1 and player 2 collided')
-                broadcaster.emit('game ended', gameEndObj)
                 gameState.gameFinished = true
-                return
+                return gameEndObj
             }
         }
     }
@@ -102,20 +137,18 @@ function processGameTurn(broadcaster, gameState) {
             }
         }
     if (gameEndObj.length === 1) {
-        broadcaster.emit('game ended', gameEndObj)
         gameState.gameFinished = true
         gameState.snakes[gameEndObj[0].winner - 1].game_score++
         if (gameState.snakes[gameEndObj[0].winner - 1].advantage_point === 5)
             gameState.snakes[gameEndObj[0].winner - 1].game_score++
-        return
+        return gameEndObj
     }
     if (gameEndObj.length > 1) {
         gameEndObj = [{'winner': 0, 'reason': 'player 1 and player 2 collided at the same time'}]
         console.log('tie. player 1 and player 2 collided at the same time')
         console.log(gameEndObj)
-        broadcaster.emit('game ended', gameEndObj)
         gameState.gameFinished = true
-        return
+        return gameEndObj
     }
     for (let n = 0; n < gameState.snakes.length; n++) {
         gameState.snakes[n].body_coords.unshift(nextHead[n])
@@ -140,4 +173,5 @@ module.exports = {
     spawnFood: spawnFood,
     shiftFood: shiftFood,
     play: processGameTurn,
+    resetGame: resetGame
 }

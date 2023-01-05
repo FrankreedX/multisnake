@@ -61,14 +61,6 @@ socket.on('snake update', (game) => {
     foodCount.textContent = "Food count: " + gameState.foodCounter
     if (!debug)
         frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter))
-    let difference = gameState.snakes[1].advantage_point - gameState.snakes[0].advantage_point
-    if (difference >= 0) {
-        document.getElementById("redAdvBoard").textContent = ''
-        document.getElementById("blueAdvBoard").textContent = '●'.repeat(difference)
-    } else {
-        document.getElementById("blueAdvBoard").textContent = ''
-        document.getElementById("redAdvBoard").textContent = '●'.repeat(-difference)
-    }
 
     currentFrame = gameState.frame
     console.log("rendering frame " + gameState.frame)
@@ -85,6 +77,7 @@ socket.on('initial countdown', async (num) => {
         for (let c = 0; c < (boardRow * boardCol); c++) {
             gridItems[c].style.setProperty("background-color", backgroundColor)
         }
+        online = true
     }
     if (num <= 2) {
         renderBoard()
@@ -160,6 +153,16 @@ let body_parts = [
 ]
 
 function renderBoard() {
+    //scoreboard dots
+    let difference = gameState.snakes[1].advantage_point - gameState.snakes[0].advantage_point
+    if (difference >= 0) {
+        document.getElementById("redAdvBoard").textContent = ''
+        document.getElementById("blueAdvBoard").textContent = '●'.repeat(difference)
+    } else {
+        document.getElementById("blueAdvBoard").textContent = ''
+        document.getElementById("redAdvBoard").textContent = '●'.repeat(-difference)
+    }
+
     //Fill all cells with backgroundColor
     for (let c = 0; c < boardCol * boardRow; c++) {
         let item = gridItems[c].style

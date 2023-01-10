@@ -1,0 +1,73 @@
+:root {
+    --grid-cols: 1;
+    --grid-rows: 1;
+}
+
+#identityBar{
+    /*display: flex;*/
+    /*justify-content: space-between;*/
+    float:right;
+}
+
+.pfp{
+    max-width: 50px;
+    max-height: 50px;
+    border-radius: 50%;
+}
+
+#email{
+    min-width: 100px;
+    min-height: 1rem;
+    background: #b31748;
+}
+
+#advBoard {
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
+    font-size: 5em;
+}
+
+#advBoard p {
+    margin: 0;
+}
+
+#redAdvBoard {
+    color: #b31748;
+    text-align: right;
+    width: 5em;
+    height: 1em;
+    border-right-color: black;
+    border-right-width: 1px;
+    border-right-style: solid;
+}
+
+#blueAdvBoard {
+    color: #0022aa;
+    text-align: left;
+    width: 5em;
+    height: 1em;
+    border-left-color: black;
+    border-left-width: 1px;
+    border-left-style: solid;
+}
+
+#scoreboard {
+    display: flex;
+    justify-content: space-around;
+}
+
+#playfield {
+    display: grid;
+    grid-template-rows: repeat(var(--grid-rows), 1em);
+    grid-template-columns: repeat(var(--grid-cols), 1em);
+    border: thin solid red;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.grid-item {
+    border: unset;
+    background-color: aquamarine;
+    text-align: center;
+}

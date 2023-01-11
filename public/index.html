@@ -1,14 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="multiplayer snake" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>Multisnake</title>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>Menu</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="/communications.js"></script>
+  <script src="/graphics.js"></script>
+  <script src="/backend_game.js"></script>
+  <script src="local_game.js"></script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<h1>Competitive snake!</h1>
+<div id="identityBar">
+  <img src="#" id="loggedInUser" class="pfp">
+  <p id="username">sth</p>
+  <a href="/oauth2">Login</a>
+  <p id="wins">Wins: 0</p>
+  <p id="loss">Loss: 0</p>
+  <p id="elo">Elo: 1500</p>
+</div>
+<button type="button" id="createRoom" onclick="createRoom()">Create Room</button>
+<p id="roomid"></p>
+<button type="button" id="startLocal" onclick="startLocal()">Start Local Game</button>
+<br>
+<input type="text" id="echoText" name="echoText">
+<button type="button" id="echoTest" onclick="echoTest(document.getElementById('echoText').value)">Echo Test</button>
+<br>
+<label for="roomidToJoin">Room ID to join</label>
+<input type="text" id="roomidToJoin" name="roomidToJoin">
+<button type="button" id="joinRoom" onclick="joinRoom(document.getElementById('roomidToJoin').value)">Join Room</button>
+<br>
+<label for="debug">Enable debug? </label>
+<input type="checkbox" id="debug" name="debug">
+<br>
+<label for="framerate">New Framerate</label>
+<input type="text" id="framerate" name="framerate">
+<button type="button" id="update-framerate" onclick="updateFramerate(document.getElementById('update-framerate').value)">
+  Update framerate
+</button>
+<br>
+<button type="button" id="rematchBtn" onclick="rematch()">Rematch</button>
+<p id="countdown">Countdown: </p>
+<p id="foodcount"></p>
+<p id="frames"></p>
+<p id="gameEnd"></p>
+<div id="advBoard">
+  <p id="redAdvBoard"></p>
+  <p id="blueAdvBoard"></p>
+</div>
+<div id="scoreboard">
+  <div>
+    <p>Red Snake</p>
+    <img id="player1Img" class="pfp">
+    <p id="player1Name"></p>
+  </div>
+  <p id="player1Score">0</p>
+  <p id="deuceText"></p>
+  <p id="player2Score">0</p>
+  <div>
+    <p>Blue Snake</p>
+    <img id="player2Img" class="pfp">
+    <p id="player2Name"></p>
+  </div>
+</div>
+<div id="playfield"></div>
+</body>
 </html>

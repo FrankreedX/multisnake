@@ -127,17 +127,15 @@ app.get('/backend_game.js', (req, res) => {
     })
 })
 
-app.get('/', (req, res, next) => {
-    if (!req.cookies.sessionID || !session_list[req.cookies.sessionID]) {
+io.engine.on("initial_headers", (headers, request) => {
+    let cookie = parse(request.headers.cookie)
+    if (!cookie.sessionID || !session_list[cookie.sessionID]) {
         let session_id = generate_session_id({id: '0000'}, '0000')
 
-        let d = new Date(0)
-        d.setUTCMilliseconds(session_list[session_id].timeout)
-
-        res.cookie('sessionID', session_id, {httpOnly: true, secure: true})
+        headers["set-cookie"] = serialize('sessionID', session_id, {httpOnly: true, secure: true})
     }
-    next()
-})
+});
+
 
 app.use(express.static('./public'))
 
@@ -192,18 +190,7 @@ async function startGame(gameState) {
     broadcaster.emit('get input', gameState)
 }
 
-function generate_session_id(player_id, sessionID) {
-    if (sessionID === '0000')
-        sessionID = crypto.randomUUID()
-    let obj = player_id
-    obj['socket_id'] = ''
-    obj['socket_room'] = ''
-    obj['timeout'] = Date.now() + 2629746000 //will expire 1 month from now
-    session_list[sessionID] = obj;
-    return sessionID
-}
-
-function handle_match_ending(){
+function handle_match_ending(gameState){
     if (gameState.snakes[0].game_score === 6 && gameState.snakes[1].game_score === 6)
         gameState.deuce = true
     if (gameState.deuce) {
@@ -233,6 +220,17 @@ function handle_match_ending(){
             startGame(gameState)
         })
     }
+}
+
+function generate_session_id(player_id, sessionID) {
+    if (sessionID === '0000')
+        sessionID = crypto.randomUUID()
+    let obj = player_id
+    obj['socket_id'] = ''
+    obj['socket_room'] = ''
+    obj['timeout'] = Date.now() + 2629746000 //will expire 1 month from now
+    session_list[sessionID] = obj;
+    return sessionID
 }
 
 io.on('connection', (socket) => {
@@ -329,7 +327,7 @@ io.on('connection', (socket) => {
         }
         if (gameState.gameFinished) {
             sendScore(gameState)
-            handle_match_ending()
+            handle_match_ending(gameState)
             return
         }
         console.log("received data ", direction.dir, "from id ", socket.id, " on frame ", direction.frame)
@@ -406,7 +404,7 @@ io.on('connection', (socket) => {
     })
 })
 
-let port = process.env.PORT || 3000
+let port = process.env.PORT || 3001
 server.listen(port, () => {
     console.log('listening on *:', port)
 })

@@ -69,10 +69,10 @@ function resetGame(gameState) {
         let currentSnake = {
             'body_coords': [],
             'direction': n * 2 + 1,
-            'skin_head': ['Assets/head_snake_red.png', 'Assets/head_snake_blue.png'],
-            'skin_body_straight': ['Assets/body_red.png', 'Assets/body_blue.png'],
-            'skin_body_angle': ['Assets/90_degree_turn_red.png', 'Assets/90_degree_turn_blue.png'],
-            'skin_tail': ['Assets/tail_red.png', 'Assets/tail_blue.png'],
+            'skin_head': ['Assets/snakes/red-snake/head_snake_red.png', 'Assets/snakes/blue-snake/head_snake_blue.png'],
+            'skin_body_straight': ['Assets/snakes/red-snake/body_red.png', 'Assets/snakes/blue-snake/body_blue.png'],
+            'skin_body_angle': ['Assets/snakes/red-snake/90_degree_turn_red.png', 'Assets/snakes/blue-snake/90_degree_turn_blue.png'],
+            'skin_tail': ['Assets/snakes/red-snake/tail_red.png', 'Assets/snakes/blue-snake/tail_blue.png'],
             'received_input': true,
             'advantage_point': 0,
             'game_score': game_score[n]

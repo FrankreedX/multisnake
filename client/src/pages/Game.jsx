@@ -16,8 +16,8 @@ const Game = () => {
 
             </div>
             <div className='center'>
-                <RoomID roomId="placeholder ID" />
-                {/* <Score /> */}
+                {/* <RoomID roomId="placeholder ID" /> */}
+                <Score />
                 <Canvas />
             </div>
             <div className='right'>

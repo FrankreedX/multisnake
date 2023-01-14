@@ -116,8 +116,8 @@ input{
 /* ===== CANVAS ===== */
 
 #canvas-container{
-  width: 45rem;
-  height: 45rem;
+  width: 70rem;
+  height: 35rem;
   border: solid 1rem var(--snakeBlack);
 }
 

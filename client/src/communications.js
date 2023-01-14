@@ -1,126 +1,24 @@
-let playfield
-let gridItems
-let countdown
-let foodCount
-let frames
-let gameEnd
-let debug
-let player1Score
-let player2Score
-let deuceText
-let player1Img
-let player2Img
-let player1Name
-let player2Name
-
-let userProfile
-
-function coordToStraight(row, col) {
-    return row * boardCol + col
+export function createRoom(socket) {
+    socket.emit('createRoom', {'boardCol': boardCol, 'boardRow': boardRow, 'debugMode': debug})
+    document.getElementById('roomid').textContent = "Room created: " + socket.id
 }
 
-//load dom elements into variables
-window.onload = async () => {
-    playfield = document.getElementById("playfield")
-    gridItems = playfield.getElementsByClassName("grid-item")
-    countdown = document.getElementById("countdown")
-    foodCount = document.getElementById("foodcount")
-    frames = document.getElementById("frames")
-    debug = document.getElementById("debug").value
-    gameEnd = document.getElementById("gameEnd")
-    player1Score = document.getElementById("player1Score")
-    player2Score = document.getElementById("player2Score")
-    deuceText = document.getElementById("deuceText")
-    player1Img = document.getElementById("player1Img")
-    player2Img = document.getElementById("player2Img")
-    player1Name = document.getElementById("player1Name")
-    player2Name = document.getElementById("player2Name")
-
-    //tell CSS the dimension of the gameboard so it can line them up
-    playfield.style.setProperty('--grid-rows', boardRow.toString());
-    playfield.style.setProperty('--grid-cols', boardCol.toString());
-    //spawn divs and color them
-    for (let c = 0; c < boardRow * boardCol; c++) {
-        let cell = document.createElement("div");
-        cell.style.setProperty("background-color", "black")
-        cell.className = "grid-item"
-        playfield.appendChild(cell);
-    }
-    setIDBoard()
+export function joinRoom(socket, room) {
+    socket.emit('joinRoom', room)
 }
 
-let backgroundColor = "black"
-let foodColor = "Green"
-let nextFoodColor = "#004000"
-let guideColor = "DimGray"
+export function echoTest(socket, message) {
+    socket.emit('echoTest', message)
+}
 
-//CALLED EVERY FRAME
-socket.on('snake update', (game) => {
-    console.log('snake update')
-    gameState = game
-    foodCount.textContent = "Food count: " + gameState.foodCounter
-    if (!debug)
-        frames.textContent = "FPS: " + (15 + Math.floor(gameState.foodCounter))
+export function rematch(socket) {
+    socket.emit('rematch')
+}
 
-    currentFrame = gameState.frame
-    console.log("rendering frame " + gameState.frame)
-    console.log("snake1 head: " + gameState.snakes[0].body_coords[0])
-    console.log("snake2 head: " + gameState.snakes[1].body_coords[0])
-    renderBoard()
-})
+export function updateFramerate(socket, fps) {
+    socket.emit('updateFramerate', fps)
+}
 
-//GRAPHICS
-let currentFrame = 0
-socket.on('initial countdown', async (num) => {
-    countdown.textContent = "Countdown: " + num
-    if (num === 3) {
-        for (let c = 0; c < (boardRow * boardCol); c++) {
-            gridItems[c].style.setProperty("background-color", backgroundColor)
-        }
-        online = true
-    }
-    if (num <= 2) {
-        renderBoard()
-    }
-    if (num === 0) {
-        frameDirectionQueue = []
-    }
-})
-
-socket.on('game ended', (winner) => {
-    console.log(winner)
-    gameEnd.textContent = 'Winner: ' + winner[0].winner + '.' + winner[0].reason
-    setIDBoard()
-})
-
-socket.on('game score', (game, player1, player2) => {
-    gameState = game
-    player1Score.textContent = gameState.snakes[0].game_score
-    player2Score.textContent = gameState.snakes[1].game_score
-    console.log("setting players: ", player1, player2)
-    player1Img.src = player1.picture
-    player1Name.textContent = player1.name
-    player2Img.src = player2.picture
-    player2Name.textContent = player2.name
-    if (gameState.deuce)
-        deuceText.textContent = "Deuce!"
-    else
-        deuceText.textContent = ""
-
-})
-
-socket.on('match ended', (winner) => {
-    if (winner.winner === 1) {
-        player1Score.textContent = "WIN: " + gameState.snakes[0].game_score
-    } else {
-        player2Score.textContent = "WIN: " + gameState.snakes[1].game_score
-    }
-})
-
-socket.on("refresh", () => {
-    console.log("refreshing")
-    window.location.reload()
-})
 
 //array of sprites
 /*
@@ -135,24 +33,24 @@ direction designations
  */
 let body_parts = [
     {
-        '01': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.25turn)"},
-        '02': {"background-image": "url(Assets/body_red.png)"},
-        '03': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0turn)"},
-        '12': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.5turn)"},
-        '13': {"background-image": "url(Assets/body_red.png)", "transform": "rotate(0.25turn)"},
-        '23': {"background-image": "url(Assets/90_degree_turn_red.png)", "transform": "rotate(0.75turn)"}
+        '01': {"background-image": "url(Assets/snakes/red-snake/90_degree_turn_red.png)", "transform": "rotate(0.25turn)"},
+        '02': {"background-image": "url(Assets/snakes/red-snake/body_red.png)"},
+        '03': {"background-image": "url(Assets/snakes/red-snake/90_degree_turn_red.png)", "transform": "rotate(0turn)"},
+        '12': {"background-image": "url(Assets/snakes/red-snake/90_degree_turn_red.png)", "transform": "rotate(0.5turn)"},
+        '13': {"background-image": "url(Assets/snakes/red-snake/body_red.png)", "transform": "rotate(0.25turn)"},
+        '23': {"background-image": "url(Assets/snakes/red-snake/90_degree_turn_red.png)", "transform": "rotate(0.75turn)"}
     },
     {
-        '01': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.25turn)"},
-        '02': {"background-image": "url(Assets/body_blue.png)"},
-        '03': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0turn)"},
-        '12': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.5turn)"},
-        '13': {"background-image": "url(Assets/body_blue.png)", "transform": "rotate(0.25turn)"},
-        '23': {"background-image": "url(Assets/90_degree_turn_blue.png)", "transform": "rotate(0.75turn)"}
+        '01': {"background-image": "url(Assets/snakes/blue-snake/90_degree_turn_blue.png)", "transform": "rotate(0.25turn)"},
+        '02': {"background-image": "url(Assets/snakes/blue-snake/body_blue.png)"},
+        '03': {"background-image": "url(Assets/snakes/blue-snake/90_degree_turn_blue.png)", "transform": "rotate(0turn)"},
+        '12': {"background-image": "url(Assets/snakes/blue-snake/90_degree_turn_blue.png)", "transform": "rotate(0.5turn)"},
+        '13': {"background-image": "url(Assets/snakes/blue-snake/body_blue.png)", "transform": "rotate(0.25turn)"},
+        '23': {"background-image": "url(Assets/snakes/blue-snake/90_degree_turn_blue.png)", "transform": "rotate(0.75turn)"}
     }
 ]
 
-function renderBoard() {
+export function renderBoard() {
     //scoreboard dots
     let difference = gameState.snakes[1].advantage_point - gameState.snakes[0].advantage_point
     if (difference >= 0) {
@@ -294,13 +192,13 @@ function renderBoard() {
     }
 }
 
-function setColor(c0, c1, color) {
+export function setColor(c0, c1, color) {
     let gridItem = gridItems[coordToStraight(c0, c1)]
     if (gridItem !== undefined)
         gridItem.style.setProperty("background-color", color)
 }
 
-function setIDBoard() {
+export function setIDBoard() {
     $.get('/profile', (data, status) => {
         console.log(status, "data: ", data)
         userProfile = data

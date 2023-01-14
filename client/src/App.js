@@ -1,6 +1,7 @@
 //dependencies
 import React, { useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
+import io from 'socket.io-client'
 
 //styles
 import './App.css';
@@ -14,15 +15,24 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Game from "./pages/Game";
 
+const socket = io()
+
 function App() {
-
-  // const [data, setData] = React.useState(null);
-
-  // React.useEffect(() => {
-  //   fetch("/game")
-  //     .then((res) => res.json())
-  //     .then((data) => setData(data.message));
-  // }, []);
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  const [gameState, setGameState] = useState({
+    'boardCol': boardCol,
+    'boardRow': boardRow,
+    'roomPlayerNum': 2,
+    'frame': 0,
+    'framerate': 15,
+    'food': [],
+    'nextFood': [],
+    'foodCounter': 0,
+    'snakes': [],
+    'gameFinished': false,
+    'deuce': false,
+    'matchFinished': false
+  })
 
   // window dimensions
 
@@ -38,6 +48,30 @@ function App() {
 
   // resize components based on window dimensions
   useEffect(() => {
+    socket.on('room created', (room) => {
+      roomid = room
+    })
+
+    socket.on('echo', (message) => {
+      console.log('client echoing', message)
+    })
+
+    socket.on('get input', (game) => {
+      setGameState(game)
+      if (frameDirectionQueue.length > 0) {
+        bufferedDirectionQueue = frameDirectionQueue
+      }
+      frameDirectionQueue = []
+      let snakeDirection = gameState.snakes[gameState.playerSocketIDs.indexOf(socket.id)].direction
+      let nextDir = bufferedDirectionQueue.shift()
+      console.log("next Dir: ", nextDir)
+      if ((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2) {
+        snakeDirection = nextDir
+      }
+      console.log("Sending direciton ", snakeDirection)
+      socket.emit('send input', {dir: snakeDirection, frame: gameState.frame})
+    })
+
     console.log("handling resizing")
     window.addEventListener('load', handleResize);
     window.addEventListener('resize', handleResize);

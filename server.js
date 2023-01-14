@@ -128,8 +128,10 @@ app.get('/backend_game.js', (req, res) => {
 })
 
 io.engine.on("initial_headers", (headers, request) => {
-    let cookie = parse(request.headers.cookie)
-    if (!cookie.sessionID || !session_list[cookie.sessionID]) {
+    let cookie = null
+    if(request.headers.cookie)
+        cookie = parse(request.headers.cookie)
+    if (!cookie || !cookie.sessionID || !session_list[cookie.sessionID]) {
         let session_id = generate_session_id({id: '0000'}, '0000')
 
         headers["set-cookie"] = serialize('sessionID', session_id, {httpOnly: true, secure: true})
@@ -234,10 +236,10 @@ function generate_session_id(player_id, sessionID) {
 }
 
 io.on('connection', (socket) => {
-    // if(!socket.handshake.headers.cookie && !socket.request.headers.cookie){
-    //     socket.emit("reconnect")
-    //     return
-    // }
+    if(!socket.handshake.headers.cookie && !socket.request.headers.cookie){
+        socket.emit("refresh")
+        return
+    }
     const cookie = parse(socket.request.headers.cookie)
     console.log('user id ', socket.id, ' connected')
     console.log('with cookie: ', cookie)

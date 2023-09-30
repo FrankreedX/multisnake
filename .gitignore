@@ -23,6 +23,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Project exclude paths
+*/.idea/
 /.idea/
 /node_modules/
 /client_secret_641609187849-vi9j7dbnrl1tck1j66hsm7ablcdqko60.apps.googleusercontent.com.json

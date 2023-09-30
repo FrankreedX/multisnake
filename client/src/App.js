@@ -16,23 +16,11 @@ import Home from "./pages/Home";
 import Game from "./pages/Game";
 
 const socket = io()
+const boardCol = 50
+const boardRow = 50
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
-  const [gameState, setGameState] = useState({
-    'boardCol': boardCol,
-    'boardRow': boardRow,
-    'roomPlayerNum': 2,
-    'frame': 0,
-    'framerate': 15,
-    'food': [],
-    'nextFood': [],
-    'foodCounter': 0,
-    'snakes': [],
-    'gameFinished': false,
-    'deuce': false,
-    'matchFinished': false
-  })
 
   // window dimensions
 
@@ -46,32 +34,19 @@ function App() {
     mainBodyHeight: null
   })
 
-  // resize components based on window dimensions
-  useEffect(() => {
-    socket.on('room created', (room) => {
-      roomid = room
-    })
-
+  //setup socket.io hooks when ready
+  useEffect(()=>{
     socket.on('echo', (message) => {
       console.log('client echoing', message)
     })
 
-    socket.on('get input', (game) => {
-      setGameState(game)
-      if (frameDirectionQueue.length > 0) {
-        bufferedDirectionQueue = frameDirectionQueue
-      }
-      frameDirectionQueue = []
-      let snakeDirection = gameState.snakes[gameState.playerSocketIDs.indexOf(socket.id)].direction
-      let nextDir = bufferedDirectionQueue.shift()
-      console.log("next Dir: ", nextDir)
-      if ((nextDir !== undefined && nextDir !== null) && Math.abs(snakeDirection - nextDir) !== 2) {
-        snakeDirection = nextDir
-      }
-      console.log("Sending direciton ", snakeDirection)
-      socket.emit('send input', {dir: snakeDirection, frame: gameState.frame})
-    })
+    return () => {
+      socket.off('echo');
+    };
+  }, [])
 
+  // resize components based on window dimensions
+  useEffect(() => {
     console.log("handling resizing")
     window.addEventListener('load', handleResize);
     window.addEventListener('resize', handleResize);
@@ -88,8 +63,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/game" element={<Game />} />
+          <Route path="/home" element={<Home socket={socket} />} />
+          <Route path="/game" element={<Game socket={socket} gameState={gameState}/>} />
           <Route path="*" element={<p>ERROR 404</p>} />
         </Routes>
       </div>

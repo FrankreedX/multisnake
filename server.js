@@ -12,13 +12,13 @@ app.use(cookies())
 
 const {Server} = require('socket.io')
 
-const server = https.createServer({
-    key: fs.readFileSync('Certificates/server.key'),
-    cert: fs.readFileSync('Certificates/server.crt'),
-    ca: fs.readFileSync('Certificates/CAserver.crt')
-}, app);
+// const server = https.createServer({
+//     key: fs.readFileSync('Certificates/server.key'),
+//     cert: fs.readFileSync('Certificates/server.crt'),
+//     ca: fs.readFileSync('Certificates/CAserver.crt')
+// }, app);
 
-// const server = http.createServer(app)
+const server = http.createServer(app)
 
 const io = new Server(server)
 
@@ -236,12 +236,20 @@ function generate_session_id(player_id, sessionID) {
 }
 
 io.on('connection', (socket) => {
+
+    console.log('user id ', socket.id, ' connected')
+
+    socket.on('echoTest', (message) => {
+        console.log('server echo', message)
+        socket.emit('echo', message)
+    })
+
     if(!socket.handshake.headers.cookie && !socket.request.headers.cookie){
+        console.log("couldn't find cookie")
         socket.emit("refresh")
         return
     }
     const cookie = parse(socket.request.headers.cookie)
-    console.log('user id ', socket.id, ' connected')
     console.log('with cookie: ', cookie)
     console.log(session_list)
     if (session_list[cookie.sessionID]) {
@@ -252,10 +260,7 @@ io.on('connection', (socket) => {
         socket.emit('refresh')
     }
 
-    socket.on('echoTest', (message) => {
-        console.log('server echo', message)
-        socket.emit('echo', message)
-    })
+    // const cookie = {"sessionID": "0000"}
 
     socket.on('getSnake', () => {
         socket.emit('snakeUpdate', gameStates.get(socket.data.roomid))

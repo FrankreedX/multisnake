@@ -33,22 +33,29 @@ direction designations
  */
 let body_parts = [
     {
-        '01': {"background-image": "url(Assets/snakes/red-snake/90_degree_turn_red.png)", "transform": "rotate(0.25turn)"},
-        '02': {"background-image": "url(Assets/snakes/red-snake/body_red.png)"},
-        '03': {"background-image": "url(Assets/snakes/red-snake/90_degree_turn_red.png)", "transform": "rotate(0turn)"},
-        '12': {"background-image": "url(Assets/snakes/red-snake/90_degree_turn_red.png)", "transform": "rotate(0.5turn)"},
-        '13': {"background-image": "url(Assets/snakes/red-snake/body_red.png)", "transform": "rotate(0.25turn)"},
-        '23': {"background-image": "url(Assets/snakes/red-snake/90_degree_turn_red.png)", "transform": "rotate(0.75turn)"}
+        '01': {"background-image": "assets/snakes/red-snake/90_degree_turn_red.png", "transform": Math.PI/2},
+        '02': {"background-image": "assets/snakes/red-snake/body_red.png", "transform": 0},
+        '03': {"background-image": "assets/snakes/red-snake/90_degree_turn_red.png", "transform": 0},
+        '12': {"background-image": "assets/snakes/red-snake/90_degree_turn_red.png", "transform": Math.PI},
+        '13': {"background-image": "assets/snakes/red-snake/body_red.png", "transform": Math.PI/2},
+        '23': {"background-image": "assets/snakes/red-snake/90_degree_turn_red.png", "transform": 3*Math.PI/2}
     },
     {
-        '01': {"background-image": "url(Assets/snakes/blue-snake/90_degree_turn_blue.png)", "transform": "rotate(0.25turn)"},
-        '02': {"background-image": "url(Assets/snakes/blue-snake/body_blue.png)"},
-        '03': {"background-image": "url(Assets/snakes/blue-snake/90_degree_turn_blue.png)", "transform": "rotate(0turn)"},
-        '12': {"background-image": "url(Assets/snakes/blue-snake/90_degree_turn_blue.png)", "transform": "rotate(0.5turn)"},
-        '13': {"background-image": "url(Assets/snakes/blue-snake/body_blue.png)", "transform": "rotate(0.25turn)"},
-        '23': {"background-image": "url(Assets/snakes/blue-snake/90_degree_turn_blue.png)", "transform": "rotate(0.75turn)"}
+        '01': {"background-image": "assets/snakes/blue-snake/90_degree_turn_blue.png", "transform": Math.PI/2},
+        '02': {"background-image": "assets/snakes/blue-snake/body_blue.png", "transform": 0},
+        '03': {"background-image": "assets/snakes/blue-snake/90_degree_turn_blue.png", "transform": 0},
+        '12': {"background-image": "assets/snakes/blue-snake/90_degree_turn_blue.png", "transform": Math.PI},
+        '13': {"background-image": "assets/snakes/blue-snake/body_blue.png", "transform": Math.PI/2},
+        '23': {"background-image": "assets/snakes/blue-snake/90_degree_turn_blue.png", "transform": 3*Math.PI/2}
     }
 ]
+
+for (let snakes in body_parts){
+    for(let directions in snakes){
+        snakes[directions]["loaded-image"] = new Image()
+        snakes[directions]["loaded-image"].src = snakes[directions]["background-image"]
+    }
+}
 
 export function renderBoard() {
     //scoreboard dots
